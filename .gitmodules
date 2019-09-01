@@ -1,0 +1,9 @@
+[submodule "Submodules/Sulakore"]
+	path = Submodules/Sulakore
+	url = https://github.com/ArachisH/Sulakore.git
+[submodule "Submodules/Eavesdrop"]
+	path = Submodules/Eavesdrop
+	url = https://github.com/ArachisH/Eavesdrop.git
+[submodule "Submodules/HabboAlerts"]
+	path = Submodules/HabboAlerts
+	url = https://github.com/put/HabboAlerts.git
