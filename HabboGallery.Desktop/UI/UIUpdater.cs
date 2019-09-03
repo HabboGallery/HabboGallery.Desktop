@@ -14,10 +14,10 @@ namespace HabboGallery.UI
 {
     public class UIUpdater
     {
-        private int _hotelIndex;
+        private int _zoomIndex;
         private HashSet<Control> _controlsToMove;
         private PrivateFontCollection _fontCollection;
-        private readonly IReadOnlyList<string> _hotelExtensions;
+        private readonly IReadOnlyList<string> _zoomTypes;
 
         private ButtonFlash _buttonFlashRunning;
 
@@ -37,7 +37,7 @@ namespace HabboGallery.UI
         public UIUpdater(MainFrm target)
         {
             Target = target;
-            _hotelExtensions = new List<string> { "US", "FI", "TR", "DE", "ES", "BR", "FR", "IT", "NL" }.AsReadOnly();
+            _zoomTypes = new List<string> { "2X", "1X" }.AsReadOnly();
 
             InitFont();
             InitDraggableControls();
@@ -55,7 +55,7 @@ namespace HabboGallery.UI
         {
             var newVersion = await Target.ApiClient.GetLatestVersionAsync();
 
-            if (newVersion > Settings.Default.AppVersion)
+            if (newVersion > Constants.APP_VERSION)
             {
                 var result = MessageBox.Show(Constants.UPDATE_FOUND_BODY, Constants.UPDATE_FOUND_TITLE, MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation);
 
@@ -100,7 +100,7 @@ namespace HabboGallery.UI
             var font = new Font(_fontCollection.Families[0], 7);
             Target.DescriptionLbl.Font = 
                 Target.IndexDisplayLbl.Font = 
-                Target.HotelLbl.Font = 
+                Target.ZoomLbl.Font = 
                 Target.StatusLbl.Font = 
                 Target.LoginEmailTxt.Font =
                 Target.AutoLoginBx.Font =
@@ -152,18 +152,21 @@ namespace HabboGallery.UI
             });
         }
 
-        public void RotateCarousel(CarouselDirection direction)
+        public void RotateZoomCarousel(CarouselDirection direction)
         {
             if (direction == CarouselDirection.Up)
-                _hotelIndex = (_hotelIndex - 1) < 0 ? _hotelExtensions.Count - 1 : _hotelIndex - 1;
+                _zoomIndex = (_zoomIndex - 1) < 0 ? _zoomTypes.Count - 1 : _zoomIndex - 1;
             else
-                _hotelIndex = (_hotelIndex + 1) == _hotelExtensions.Count ? 0 : _hotelIndex + 1;
+                _zoomIndex = (_zoomIndex + 1) == _zoomTypes.Count ? 0 : _zoomIndex + 1;
 
             Target.Invoke((MethodInvoker)delegate
             {
-                Target.HotelLbl.Text = _hotelExtensions[_hotelIndex];
+                Target.ZoomLbl.Text = _zoomTypes[_zoomIndex];
             });
         }
+
+        public int GetZoomValue()
+            => _zoomIndex == 0 ? 2 : 1;
 
         public async void FlashButton(ButtonFlash button)
         {

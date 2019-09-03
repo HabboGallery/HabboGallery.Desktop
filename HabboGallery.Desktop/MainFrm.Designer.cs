@@ -37,12 +37,13 @@
             this.LoginPasswordTxt = new System.Windows.Forms.TextBox();
             this.LoginEmailTxt = new System.Windows.Forms.TextBox();
             this.LoginPnl = new System.Windows.Forms.Panel();
+            this.ExportCertificateBtn = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.StatusLbl = new System.Windows.Forms.Label();
             this.CloseBtn = new System.Windows.Forms.Panel();
             this.HotelExtensionDownBtn = new System.Windows.Forms.Panel();
             this.HotelExtensionUpBtn = new System.Windows.Forms.Panel();
-            this.HotelLbl = new System.Windows.Forms.Label();
+            this.ZoomLbl = new System.Windows.Forms.Label();
             this.IndexDisplayLbl = new System.Windows.Forms.Label();
             this.DragPnl = new System.Windows.Forms.Panel();
             this.BuyPhotoBtn = new System.Windows.Forms.Panel();
@@ -52,7 +53,6 @@
             this.PublishToWebBtn = new System.Windows.Forms.Panel();
             this.DescriptionLbl = new System.Windows.Forms.Label();
             this.PhotoPreviewBx = new System.Windows.Forms.PictureBox();
-            this.ExportCertificateBtn = new System.Windows.Forms.Button();
             this.CertLocationDlg = new System.Windows.Forms.FolderBrowserDialog();
             this.LoginPnl.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.PhotoPreviewBx)).BeginInit();
@@ -163,6 +163,19 @@
             this.LoginPnl.Size = new System.Drawing.Size(163, 118);
             this.LoginPnl.TabIndex = 53;
             // 
+            // ExportCertificateBtn
+            // 
+            this.ExportCertificateBtn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(136)))), ((int)(((byte)(136)))), ((int)(((byte)(136)))));
+            this.ExportCertificateBtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.ExportCertificateBtn.ForeColor = System.Drawing.Color.Black;
+            this.ExportCertificateBtn.Location = new System.Drawing.Point(65, 91);
+            this.ExportCertificateBtn.Name = "ExportCertificateBtn";
+            this.ExportCertificateBtn.Size = new System.Drawing.Size(56, 23);
+            this.ExportCertificateBtn.TabIndex = 46;
+            this.ExportCertificateBtn.Text = "Cert";
+            this.ExportCertificateBtn.UseVisualStyleBackColor = false;
+            this.ExportCertificateBtn.Click += new System.EventHandler(this.ExportCertificateBtn_Click);
+            // 
             // label1
             // 
             this.label1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(51)))), ((int)(((byte)(51)))));
@@ -218,14 +231,14 @@
             // 
             // HotelLbl
             // 
-            this.HotelLbl.BackColor = System.Drawing.Color.Transparent;
-            this.HotelLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.HotelLbl.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(221)))), ((int)(((byte)(221)))), ((int)(((byte)(221)))));
-            this.HotelLbl.Location = new System.Drawing.Point(174, 251);
-            this.HotelLbl.Name = "HotelLbl";
-            this.HotelLbl.Size = new System.Drawing.Size(35, 15);
-            this.HotelLbl.TabIndex = 48;
-            this.HotelLbl.Text = "US";
+            this.ZoomLbl.BackColor = System.Drawing.Color.Transparent;
+            this.ZoomLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ZoomLbl.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(221)))), ((int)(((byte)(221)))), ((int)(((byte)(221)))));
+            this.ZoomLbl.Location = new System.Drawing.Point(174, 251);
+            this.ZoomLbl.Name = "HotelLbl";
+            this.ZoomLbl.Size = new System.Drawing.Size(35, 15);
+            this.ZoomLbl.TabIndex = 48;
+            this.ZoomLbl.Text = "2X";
             // 
             // IndexDisplayLbl
             // 
@@ -325,19 +338,6 @@
             this.PhotoPreviewBx.TabIndex = 39;
             this.PhotoPreviewBx.TabStop = false;
             // 
-            // ExportCertificateBtn
-            // 
-            this.ExportCertificateBtn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(136)))), ((int)(((byte)(136)))), ((int)(((byte)(136)))));
-            this.ExportCertificateBtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.ExportCertificateBtn.ForeColor = System.Drawing.Color.Black;
-            this.ExportCertificateBtn.Location = new System.Drawing.Point(65, 91);
-            this.ExportCertificateBtn.Name = "ExportCertificateBtn";
-            this.ExportCertificateBtn.Size = new System.Drawing.Size(56, 23);
-            this.ExportCertificateBtn.TabIndex = 46;
-            this.ExportCertificateBtn.Text = "Cert";
-            this.ExportCertificateBtn.UseVisualStyleBackColor = false;
-            this.ExportCertificateBtn.Click += new System.EventHandler(this.ExportCertificateBtn_Click);
-            // 
             // MainFrm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -350,7 +350,7 @@
             this.Controls.Add(this.CloseBtn);
             this.Controls.Add(this.HotelExtensionDownBtn);
             this.Controls.Add(this.HotelExtensionUpBtn);
-            this.Controls.Add(this.HotelLbl);
+            this.Controls.Add(this.ZoomLbl);
             this.Controls.Add(this.IndexDisplayLbl);
             this.Controls.Add(this.DragPnl);
             this.Controls.Add(this.BuyPhotoBtn);
@@ -390,7 +390,7 @@
         public System.Windows.Forms.Panel CloseBtn;
         public System.Windows.Forms.Panel HotelExtensionDownBtn;
         public System.Windows.Forms.Panel HotelExtensionUpBtn;
-        public System.Windows.Forms.Label HotelLbl;
+        public System.Windows.Forms.Label ZoomLbl;
         public System.Windows.Forms.Label IndexDisplayLbl;
         public System.Windows.Forms.Panel DragPnl;
         public System.Windows.Forms.Panel BuyPhotoBtn;

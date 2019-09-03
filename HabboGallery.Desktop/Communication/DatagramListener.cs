@@ -47,7 +47,7 @@ namespace HabboGallery.Communication
                             OldPhoto photo = JsonConvert.DeserializeObject<OldPhoto>(decoded);
                             BuyRequestReceived(null, photo);
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
                             // TODO: not sure
                         }

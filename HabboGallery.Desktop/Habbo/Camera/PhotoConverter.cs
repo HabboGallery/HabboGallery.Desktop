@@ -10,49 +10,35 @@ namespace HabboGallery.Habbo.Camera
 {
     public static class PhotoConverter
     {
-        public static HPhoto OldToNew(OldPhoto old)
+        public static HPhoto OldToNew(OldPhoto old, int zoom)
         {
-            HPhoto finalPhoto = new HPhoto();
-            Plane firstPlane = new Plane
+            HPhoto photo = new HPhoto();
+            Plane mainPlane = new Plane
             {
-                Z = -2.142686649821824,
-                Color = 0
+                Z = 3546.8730429908073,
+                Color = 0,
+                IsBottomAligned = false
             };
-            firstPlane.CornerPoints.AddRange(new List<Point> { new Point(0, 0), new Point(0, 0), new Point(0, 0), new Point(0, 0) });
+            for (int i = 0; i < 4; i++)
+                mainPlane.CornerPoints.Add(new Point(0, 0));
 
-            Sprite outOfBoundsFurniSprite = new Sprite
+            Sprite mainSprite = new Sprite
             {
-                X = -3000,
-                Y = -3000,
-                Z = -7.470998649821824,
-                Name = Constants.SANTORINI_FURNI_NAME,
-                Color = 16777215
-            };
-            Sprite adsBackgroundSprite = new Sprite
-            {
-                X = -3000,
-                Y = -3000,
-                Z = -10.963789112594961,
-                Name = Constants.ADS_BACKGROUND_FURNI_NAME,
-                Color = 16777215
-            };
-            Sprite strFillSprite = new Sprite
-            {
-                X = 79,
-                Y = 109,
-                Z = -10.96449621933915,
-                Width = 160,
-                Height = 110,
                 Name = Encoding.UTF8.GetString(Convert.FromBase64String(UnfoldStrFill(old.StrFill))),
-                Color = 16777215
+                X = 79,
+                Y = 102,
+                Z = 3545.0969389908073,
+                Color = 16777215,
+                Width = 162,
+                Height = 117
             };
 
-            finalPhoto.Planes.Add(firstPlane);
-            finalPhoto.Sprites.Add(outOfBoundsFurniSprite);
-            finalPhoto.Sprites.Add(adsBackgroundSprite);
-            finalPhoto.Sprites.Add(strFillSprite);
+            photo.Planes.Add(mainPlane);
+            photo.Sprites.Add(mainSprite);
 
-            return finalPhoto;
+            photo.Zoom = zoom;
+
+            return photo;
         }
 
         private static string UnfoldStrFill(string filler)

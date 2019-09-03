@@ -70,10 +70,6 @@ namespace HabboGallery
         public int CurrentRoomId { get; private set; }
         public PhotoLoadType LoadingPhotos { get; set; }
 
-        public int CurrentRoomTotalPhotosFound { get; set; }
-        public int CurrentRoomPhotosSucceeded { get; set; }
-        public bool CurrentRoomUserShouldBeNotified { get; set; }
-
         public MainFrm()
         {
             ImageCache = new Dictionary<int, Image>();
@@ -225,13 +221,10 @@ namespace HabboGallery
 
             if (!ImageCache.ContainsKey(id) && !Photos.ContainsKey(id) && photoPublishResponse.Success)
             {
-                Photos.Add(id, photo);
-                Photos[id].StrFill = photoPublishResponse.Data.StrFill;
+                Photos.Add(id, photoPublishResponse.Data);
                 ImageCache.Add(id, photoPublishResponse.Data.CreateDateImage(await ApiClient.GetPhotoAsync(new Uri(photoPublishResponse.Data.Url))));
                 _ui.Update();
             }
-
-            CurrentRoomPhotosSucceeded += photoPublishResponse.Success ? 1 : 0;
         }
 
         private async void RoomWallItemsLoaded(DataInterceptedEventArgs e)
@@ -241,26 +234,42 @@ namespace HabboGallery
             LoadingPhotos = PhotoLoadType.Room;
 
             List<HWallItem> items = HWallItem.Parse(e.Packet).ToList().FindAll(i => i.TypeId == 3 && !Photos.ContainsKey(i.Id) && !RoomItemsQueue.Contains(i.Id) && !ExtraPhotoData.ContainsKey(i.Id));
-            int[] itemIds = items.Select(i => i.TypeId).ToArray();
+            int[] itemIds = await ApiClient.BatchCheckExistingIdsAsync(items.Select(i => i.Id).ToArray(), GameData.Hotel);
 
             HabboAlert alert = AlertBuilder.CreateAlert(HabboAlertType.Bubble,
                 (items.Count == 0 ? Constants.SCANNING_EMPTY : items.Count.ToString())
                 + (items.Count == 0 || items.Count > 1 ? Constants.SCANNING_MULTI : Constants.SCANNING_SINGLE)
-                + Constants.SCANNING_WALLITEMS_DONE)
+                + Constants.SCANNING_WALLITEMS_DONE + itemIds.Length + Constants.SCANNING_WALLITEMS_UNDISC)
                 .ImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_DEFAULT_PATH);
 
             await Connection.SendToClientAsync(alert.ToPacket(In.NotificationDialog));
 
             foreach (HWallItem item in items)
             {
-                RoomItemsQueue.Add(item.Id);
-                ExtraPhotoData.Add(item.Id, (item, CurrentRoomId));
+                if (itemIds.Contains(item.Id))
+                {
+                    RoomItemsQueue.Add(item.Id);
+                    ExtraPhotoData.Add(item.Id, (item, CurrentRoomId));
+                }
+                else
+                {
+                    await GetKnownPhotoByIdAsync(item.Id);
+                }
             }
 
-            CurrentRoomPhotosSucceeded = 0;
-            CurrentRoomTotalPhotosFound = RoomItemsQueue.Count;
-            CurrentRoomUserShouldBeNotified = true;
             ProgressRoomItemsQueue();
+        }
+
+        private async Task GetKnownPhotoByIdAsync(int photoId)
+        {
+            ApiResponse<OldPhoto> photoResponse = await ApiClient.GetPhotoByIdAsync(photoId, GameData.Hotel);
+
+            if (!ImageCache.ContainsKey(photoId) && !Photos.ContainsKey(photoId) && photoResponse.Success)
+            {
+                Photos.Add(photoId, photoResponse.Data);
+                ImageCache.Add(photoId, photoResponse.Data.CreateDateImage(await ApiClient.GetPhotoAsync(new Uri(photoResponse.Data.Url))));
+                _ui.Update();
+            }
         }
 
         private async void ProgressRoomItemsQueue()
@@ -274,23 +283,12 @@ namespace HabboGallery
             {
                 _ui.UpdateRoomItemsQueueStatusMessage();
                 LoadingPhotos = PhotoLoadType.None;
-
-                if (CurrentRoomUserShouldBeNotified && CurrentRoomTotalPhotosFound > 0)
-                {
-                    CurrentRoomUserShouldBeNotified = false;
-
-                    HabboAlert alert =
-                        AlertBuilder.CreateAlert(HabboAlertType.Bubble, CurrentRoomPhotosSucceeded + Constants.OUT_OF + CurrentRoomTotalPhotosFound + Constants.SUCCEEDED_COUNT_DIALOG_BODY)
-                            .ImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_DEFAULT_PATH);
-
-                    await Connection.SendToClientAsync(alert.ToPacket(In.NotificationDialog));
-                }
             }
         }
 
         public async void SendPhoto(OldPhoto photo)
         {
-            byte[] compressed = Flazzy.Compression.ZLIB.Compress(Encoding.UTF8.GetBytes(PhotoConverter.OldToNew(photo).ToString()));
+            byte[] compressed = Flazzy.Compression.ZLIB.Compress(Encoding.UTF8.GetBytes(PhotoConverter.OldToNew(photo, _ui.GetZoomValue()).ToString()));
             await Connection.SendToServerAsync(Out.CameraRoomPicture, compressed.Length, compressed);
         }
 
@@ -336,12 +334,12 @@ namespace HabboGallery
 
         private void HotelExtensionUpBtn_Click(object sender, EventArgs e)
         {
-            _ui.RotateCarousel(CarouselDirection.Up);
+            _ui.RotateZoomCarousel(CarouselDirection.Up);
         }
 
         private void HotelExtensionDownBtn_Click(object sender, EventArgs e)
         {
-            _ui.RotateCarousel(CarouselDirection.Down);
+            _ui.RotateZoomCarousel(CarouselDirection.Down);
         }
 
         private void CloseBtn_Click(object sender, EventArgs e)
@@ -378,7 +376,7 @@ namespace HabboGallery
             InitializeSettings();
         }
 
-        private async void InitializeSettings()
+        private void InitializeSettings()
         {
             if (Settings.Default.AutoLogin)
             {
@@ -558,7 +556,7 @@ namespace HabboGallery
 
                 e.IsBlocked = true;
             }
-            else if (e.Packet.Id == Out.RequestUserInfo)
+            else if (e.Packet.Id == Out.InfoRetrieve)
             {
                 _datagramListener = new DatagramListener(Constants.DATAGRAM_LISTEN_PORT);
                 _datagramListener.BuyRequestReceived += ExternalBuyRequestReceived;
@@ -637,6 +635,17 @@ namespace HabboGallery
             {
                 UsernameOfSession = e.Packet.ReadUTF8();
             }
+            else if (e.Packet.Id == Out.UseWallItem)
+            {
+                int furniId = e.Packet.ReadInt32();
+                e.Packet.ReadInt32();
+
+                if (ImageCache.ContainsKey(furniId))
+                {
+                    CurrentIndex = Photos.Values.ToList().FindIndex(p => p.Id == furniId);
+                    _ui.Update();
+                }
+            }
         }
 
         public string IdentifierFromUrl(string url)
@@ -678,7 +687,7 @@ namespace HabboGallery
                 _inventoryItemsRequested = false;
                 OnInventoryLoaded(e);
             }
-            else if (e.Packet.Id == In.CameraURL)
+            else if (e.Packet.Id == In.CameraStorageUrl)
             {
                 OnPreviewLoaded(e);
             }

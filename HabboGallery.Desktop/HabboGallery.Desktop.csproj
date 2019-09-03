@@ -104,6 +104,7 @@
     <Compile Include="UI\UIUpdater.cs" />
     <Compile Include="Web\ApiClient.cs" />
     <Compile Include="Web\Json\ApiResponse.cs" />
+    <Compile Include="Web\Json\BatchRequest.cs" />
     <Compile Include="Web\Json\Converter\RegionToHotelConverter.cs" />
     <EmbeddedResource Include="MainFrm.resx">
       <DependentUpon>MainFrm.cs</DependentUpon>

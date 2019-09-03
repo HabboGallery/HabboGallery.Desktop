@@ -3,6 +3,8 @@
     public static class Constants
     {
         public const string APP_NAME = "HabboGallery";
+        public const double APP_VERSION = 0.25;
+
         public const string BASE_URL = "https://habbo.gallery/";
 
         public const ushort PROXY_PORT = 8282;
@@ -40,7 +42,8 @@
 
         public const string APP_CONNECT_SUCCESS = "HabboGallery has successfully connected to Habbo, woo!";
 
-        public const string SCANNING_WALLITEMS_DONE = "found in this room!";
+        public const string SCANNING_WALLITEMS_DONE = "found in this room! ";
+        public const string SCANNING_WALLITEMS_UNDISC = " of them have not been discovered before!";
 
         public const string SCANNING_MULTI = " photos were ";
         public const string SCANNING_SINGLE = " photo was ";

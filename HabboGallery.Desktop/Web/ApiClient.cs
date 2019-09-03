@@ -14,6 +14,8 @@ using Sulakore.Network;
 using Newtonsoft.Json;
 using HabboGallery.Web.Json;
 using HabboGallery.Properties;
+using Sulakore.Habbo;
+using System.Text;
 
 namespace HabboGallery.Web
 {
@@ -72,6 +74,44 @@ namespace HabboGallery.Web
             }
         }
 
+        public async Task<int[]> BatchCheckExistingIdsAsync(int[] ids, HHotel hotel)
+        {
+            BatchRequest request = new BatchRequest(_loginKey, HotelEndPoint.GetRegion(hotel), ids);
+
+            using (HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, "photos/checkexisting"))
+            {
+                message.Content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
+
+                using (HttpResponseMessage response = await _client.SendAsync(message))
+                {
+                    try
+                    {
+                        string content = await response.Content.ReadAsStringAsync();
+                        return JsonConvert.DeserializeObject<int[]>(content);
+                    }
+                    catch (Exception)
+                    {
+                        return ids;
+                    }
+                }
+            }
+        }
+
+        public async Task<ApiResponse<OldPhoto>> GetPhotoByIdAsync(int photoId, HHotel hotel)
+        {
+            using (HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Get, $"photos/byid/{HotelEndPoint.GetRegion(hotel)}/{photoId}"))
+            {
+                using (HttpResponseMessage response = await _client.SendAsync(message))
+                {
+                    string jsonBody = await response.Content.ReadAsStringAsync();
+                    ApiResponse<OldPhoto> responseData = JsonConvert.DeserializeObject<ApiResponse<OldPhoto>>(jsonBody);
+                    responseData.Success = response.IsSuccessStatusCode;
+
+                    return responseData;
+                }
+            }
+        }
+
         public async Task<bool> LoginAsync(string email, string password)
         {
             using (HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, "login"))
@@ -109,7 +149,7 @@ namespace HabboGallery.Web
                 using (HttpResponseMessage response = await _client.SendAsync(message))
                 {
                     string content = await response.Content.ReadAsStringAsync();
-                    double version = Settings.Default.AppVersion;
+                    double version = Constants.APP_VERSION;
 
                     double.TryParse(content, out version);
                     return version;
