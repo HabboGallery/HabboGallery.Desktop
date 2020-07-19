@@ -1,9 +1,8 @@
-﻿namespace HabboGallery
+﻿namespace HabboGallery.Desktop
 {
     public static class Constants
     {
-        public const string APP_NAME = "HabboGallery";
-        public const double APP_VERSION = 0.25;
+        public const double APP_VERSION = 0.3;
 
         public const string BASE_URL = "https://habbo.gallery/";
 
@@ -48,9 +47,6 @@
         public const string SCANNING_MULTI = " photos were ";
         public const string SCANNING_SINGLE = " photo was ";
 
-        public const string CERT_CERTIFICATE_NAME = "HabboGallery Root Certificate";
-        public const string CERT_FILE_EXTENSION = ".cer";
-
         public const string UPDATE_FOUND_BODY = "A newer version of HabboGallery Desktop was found, would you like to download it?";
         public const string UPDATE_FOUND_TITLE = "HabboGallery ~ Update Found";
 
@@ -60,9 +56,7 @@
 
         public const string HASHES_FILE_NAME = "Hashes.ini";
 
-        public const string LOCALHOST_ENDPOINT = "127.0.0.1";
-
-        public const int DATAGRAM_LISTEN_PORT = 9119;
+        public const int UDP_LISTENER_PORT = 9119;
 
         public const string RESPONSE_NAME_NUT = "newUserTour";
         public const string RESPONSE_NAME_EXTERNAL_BUY = "confirmExternalBuy";
@@ -90,8 +84,6 @@
         public const string STILL_BUSY_DIALOG_INV_BODY = "Photos in this room have not been loaded. Please wait, we're still processing the photos in your inventory!";
         public const string STILL_BUSY_DIALOG_ROOM_BODY = "Inventory has not been loaded. Please wait, we're still processing some photos that were in found in a room.";
         public const string STILL_BUSY_DIALOG_NEWROOM_BODY = "You entered a new room before all photos in the previous room were loaded. The queue for that room has been cleared!";
-
-        public const string REGISTER_URL = "register";
 
         public const string OUT_OF = " out of ";
         public const string SUCCEEDED_COUNT_DIALOG_BODY = " were successfully recovered. Photos that failed might have been permanently deleted.";

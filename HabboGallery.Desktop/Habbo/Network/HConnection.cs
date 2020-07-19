@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace HabboGallery.Habbo.Network
+namespace HabboGallery.Desktop.Habbo.Network
 {
     public class HConnection : IHConnection
     {
@@ -127,17 +127,13 @@ namespace HabboGallery.Habbo.Network
                     OnConnected(args);
 
                     endpoint = (args.HotelServer ?? endpoint);
-                    if (endpoint == null)
-                    {
-                        endpoint = await args.HotelServerSource.Task.ConfigureAwait(false);
-                    }
+
+                    endpoint ??= await args.HotelServerSource.Task.ConfigureAwait(false);
 
                     if (args.IsFakingPolicyRequest)
                     {
-                        using (var tempRemote = await HNode.ConnectNewAsync(endpoint).ConfigureAwait(false))
-                        {
-                            await tempRemote.SendAsync(Encoding.UTF8.GetBytes(CROSS_DOMAIN_POLICY_REQUEST)).ConfigureAwait(false);
-                        }
+                        using var tempRemote = await HNode.ConnectNewAsync(endpoint).ConfigureAwait(false);
+                        await tempRemote.SendAsync(Encoding.UTF8.GetBytes(CROSS_DOMAIN_POLICY_REQUEST)).ConfigureAwait(false);
                     }
 
                     if (!await Remote.ConnectAsync(endpoint).ConfigureAwait(false))

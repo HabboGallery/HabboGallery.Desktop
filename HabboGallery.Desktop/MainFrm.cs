@@ -1,133 +1,142 @@
-﻿using Eavesdrop;
-using Flazzy;
-using HabboAlerts;
-using HabboGallery.Communication;
-using HabboGallery.Habbo;
-using HabboGallery.Habbo.Camera;
-using HabboGallery.Habbo.Events;
-using HabboGallery.Habbo.Guidance;
-using HabboGallery.Habbo.Network;
-using HabboGallery.Properties;
-using HabboGallery.UI;
-using HabboGallery.Web;
-using HabboGallery.Web.Json;
-using Sulakore.Crypto;
-using Sulakore.Habbo;
-using Sulakore.Habbo.Messages;
-using Sulakore.Habbo.Web;
-using Sulakore.Network;
-using Sulakore.Network.Protocol;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
+﻿using System;
 using System.IO;
-using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
+using System.Linq;
+using System.Drawing;
+using System.Net.Http;
+using System.Threading;
+using System.Diagnostics;
 using System.Windows.Forms;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
-namespace HabboGallery
+using HabboGallery.Desktop.UI;
+using HabboGallery.Desktop.Web;
+using HabboGallery.Desktop.Habbo;
+using HabboGallery.Desktop.Network;
+using HabboGallery.Desktop.Web.Json;
+using HabboGallery.Desktop.Utilities;
+using HabboGallery.Desktop.Habbo.Camera;
+using HabboGallery.Desktop.Habbo.Events;
+using HabboGallery.Desktop.Habbo.Network;
+using HabboGallery.Desktop.Habbo.Guidance;
+
+using HabboAlerts;
+
+using Sulakore.Habbo;
+using Sulakore.Crypto;
+using Sulakore.Network;
+using Sulakore.Habbo.Web;
+using Sulakore.Habbo.Messages;
+using Sulakore.Network.Protocol;
+
+using Flazzy;
+
+using Eavesdrop;
+
+namespace HabboGallery.Desktop
 {
     public partial class MainFrm : Form, IMessageFilter
     {
-        public ApiClient ApiClient { get; private set; }
-        private Guid _randomQuery;
+        public Program Master => Program.Master;
+
+        public ApiClient ApiClient => Master.ApiClient;
+
+        public HGResources Resources => Master.Resources;
+        public HGConfiguration Configuration => Master.Configuration;
+
+        public HHotel Hotel => Master.GameData.Hotel;
+        public HConnection Connection => Master.Connection;
+
         private readonly UIUpdater _ui;
-        private DatagramListener _datagramListener;
+        
+        private Guid _randomQuery;
+        
+        private UdpListener _datagramListener;
 
         private bool _waitingForPreview;
         private bool _waitingForPostItData;
-
-        public HGame Game { get; set; }
-        public HGameData GameData { get; set; }
-        public HConnection Connection { get; set; }
+        private bool _inventoryItemsRequested;
 
         public Incoming In { get; set; }
         public Outgoing Out { get; set; }
 
         public Dictionary<int, OldPhoto> Photos { get; set; }
         public Dictionary<int, Image> ImageCache { get; set; }
+
         public List<int> RoomItemsQueue { get; set; }
+
         public Dictionary<int, (HWallItem Item, int RoomId)> ExtraPhotoData { get; }
+
         public List<OldPhoto> UnconfirmedExternalBuyRequests { get; set; }
 
         public NewUserTour Tour { get; set; }
 
-        private bool _inventoryItemsRequested;
-
-        public string AppDataPath { get; set; }
-
-        public OldPhoto CurrentPhoto
-            => Photos?.Values.ToArray()[CurrentIndex];
+        public OldPhoto CurrentPhoto => Photos?.Values.ToArray()[CurrentIndex];
 
         public int CurrentIndex { get; set; }
         public int BuyType { get; set; }
         public bool TourRunning { get; set; }
         public string UsernameOfSession { get; set; }
         public int CurrentRoomId { get; private set; }
+        
         public PhotoLoadType LoadingPhotos { get; set; }
+        
+        public bool HasBeenClosed { get; private set; }
+
+        public bool IsIncomingEncrypted { get; private set; }
+        public HotelEndPoint HotelServer { get; set; }
 
         public MainFrm()
         {
-            ImageCache = new Dictionary<int, Image>();
             Photos = new Dictionary<int, OldPhoto>();
+            
+            ImageCache = new Dictionary<int, Image>();
+
             RoomItemsQueue = new List<int>();
             ExtraPhotoData = new Dictionary<int, (HWallItem, int)>();
             UnconfirmedExternalBuyRequests = new List<OldPhoto>();
-            TourRunning = false;
 
-            ApiClient = new ApiClient(new Uri(Constants.BASE_URL));
             InitializeComponent();
+            
             _ui = new UIUpdater(this);
-            AppDataPath = SetAppData();
         }
 
-        private string SetAppData()
-        {
-            string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), Constants.APP_NAME);
+        public bool PreFilterMessage(ref Message m) 
+            => _ui.DragControl(ref m);
 
-            if (!Directory.Exists(path))
+        private async Task AfterLoginAsync()
+        {
+            await HandleQueueAsync().ConfigureAwait(false); //TODO:
+        }
+
+        private async Task CheckForUpdatesAsync()
+        {
+            double newVersion = await ApiClient.GetLatestVersionAsync();
+
+            if (newVersion > Constants.APP_VERSION)
             {
-                Directory.CreateDirectory(path);
+                var result = MessageBox.Show(Constants.UPDATE_FOUND_BODY, Constants.UPDATE_FOUND_TITLE, MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation);
+
+                if (result == DialogResult.Yes)
+                {
+                    Eavesdropper.Terminate();
+                    Process.Start(new ProcessStartInfo(Constants.BASE_URL + Constants.UPDATE_URL) { UseShellExecute = true });
+
+                    Environment.Exit(0);
+                }
             }
-            return path;
+            else _ui.SetStatusMessage(Constants.UP_TO_DATE_MESSAGE);
         }
-
-        private async Task AfterLogin()
+        private async Task HandleQueueAsync(CancellationToken cancellationToken = default) //TODO: Rewrite whole "event loop"
         {
-            Eavesdropper.Certifier = new CertificateManager(Constants.APP_NAME, Constants.CERT_CERTIFICATE_NAME);
-
-            GameData = new HGameData();
-            Connection = new HConnection();
-            Connection.DataOutgoing += HandleOutgoing;
-            Connection.DataIncoming += HandleIncoming;
-
-            Connection.Connected += ConnectionOpened;
-            Connection.Disconnected += ConnectionClosed;
-
-            In = new Incoming();
-            Out = new Outgoing();
-
-            if (Eavesdropper.Certifier.CreateTrustedRootCertificate())
+            while (!cancellationToken.IsCancellationRequested)
             {
-                Eavesdropper.ResponseInterceptedAsync += InterceptClientPageAsync;
-                Eavesdropper.Initiate(Constants.PROXY_PORT);
+                await Task.Delay(780);
 
-                _ui.SetStatusMessage(Constants.INTERCEPTING_CLIENT_PAGE);
-            }
-
-            await HandleQueueAsync().ConfigureAwait(false);
-        }
-
-        private async Task HandleQueueAsync()
-        {
-            while (true)
-            {
-                await Task.Delay(1000);
                 _waitingForPostItData = false;
+
                 if (RoomItemsQueue.Count > 0)
                     ProgressRoomItemsQueue();
             }
@@ -136,10 +145,12 @@ namespace HabboGallery
         private void ConnectionClosed(object sender, EventArgs e)
         {
             _ui.SetStatusMessage(Constants.DISCONNECTED);
-            _ui.ToggleSearchButton(false);
+            
+            SearchBtn.Enabled = false;
+            Resources.RenderButtonState(SearchBtn, SearchBtn.Enabled);
+
             Environment.Exit(0);
         }
-
         private void ConnectionOpened(object sender, ConnectedEventArgs e)
         {
             HPacket endPointPkt = Connection.Local.ReceivePacketAsync().Result;
@@ -148,46 +159,53 @@ namespace HabboGallery
             e.HotelServer = HotelServer = HotelEndPoint.Parse(host, port);
 
             _ui.SetStatusMessage(Constants.CONNECTED);
-            _ui.ToggleSearchButton(true);
+
+            SearchBtn.Enabled = true;
+            Resources.RenderButtonState(SearchBtn, SearchBtn.Enabled);
         }
 
-        private async void OnPreviewLoaded(DataInterceptedEventArgs e)
+        private void OnPreviewLoaded(DataInterceptedEventArgs e)
         {
             if (!_waitingForPreview) return;
 
-            await Connection.SendToServerAsync(BuyType == 1 ? Out.CameraPurchase : Out.CameraPublishToWeb);
-            _ui.Update();
+            Connection.SendToServerAsync(BuyType == 1 ? Out.PurchasePhoto : Out.PublishPhoto);
+            _ui.OnPhotoQueueUpdate();
         }
-
-        private async void OnInventoryLoaded(DataInterceptedEventArgs e)
+        private void OnInventoryLoaded(DataInterceptedEventArgs e)
         {
             e.Continue();
 
             LoadingPhotos = PhotoLoadType.Inventory;
 
-            List<CHItem> items = CHItem.Parse(e.Packet).ToList().FindAll(i => i.TypeId == 3 && !Photos.ContainsKey(i.Id));
+            IEnumerable<CHItem> items =
+                CHItem.Parse(e.Packet).Where(i => i.TypeId == 3 && !Photos.ContainsKey(i.Id));
+
+            int itemCount = items.Count();
 
             HabboAlert alert = AlertBuilder.CreateAlert(HabboAlertType.Bubble,
-                (items.Count == 0 ? Constants.SCANNING_EMPTY : items.Count.ToString())
-                + (items.Count == 0 || items.Count > 1 ? Constants.SCANNING_MULTI : Constants.SCANNING_SINGLE)
+                (itemCount == 0 ? Constants.SCANNING_EMPTY : itemCount.ToString())
+                + (itemCount == 1 ? Constants.SCANNING_SINGLE : Constants.SCANNING_MULTI)
                 + Constants.SCANNING_INVENTORY_DONE)
-                .ImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_DEFAULT_PATH);
+                .WithImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_DEFAULT_PATH);
 
-            await Connection.SendToClientAsync(alert.ToPacket(In.NotificationDialog));
+            Connection.SendToClientAsync(alert.ToPacket(In.NotificationDialog));
 
             int queueCounter = 0;
 
             foreach (CHItem item in items)
             {
-                _ui.UpdateInventoryQueueStatusMessage(items.Count - queueCounter);
-                await ProcessPhotoDataAsync(item.Id, item.ExtraData, UsernameOfSession);
+                _ui.UpdateQueueStatus(itemCount - queueCounter);
+
+                ProcessPhotoDataAsync(item.Id, item.ExtraData, UsernameOfSession);
+
                 queueCounter++;
             }
 
-            _ui.UpdateInventoryQueueStatusMessage(items.Count - queueCounter);
+            _ui.UpdateQueueStatus(itemCount - queueCounter);
             LoadingPhotos = PhotoLoadType.None;
         }
-        private async void OnPostItDataReceived(DataInterceptedEventArgs e)
+
+        private async void OnItemData(DataInterceptedEventArgs e)
         {
             int id = int.Parse(e.Packet.ReadUTF8());
             string extraData = e.Packet.ReadUTF8();
@@ -208,39 +226,26 @@ namespace HabboGallery
             {
                 _waitingForPostItData = false;
                 RoomItemsQueue.RemoveAt(0);
-                _ui.UpdateRoomItemsQueueStatusMessage();
+
+                _ui.UpdateQueueStatus(RoomItemsQueue.Count);
                 ProgressRoomItemsQueue();
             }
         }
 
-        private async Task ProcessPhotoDataAsync(int id, string extradata, string ownerName, int roomId = 0)
-        {
-            OldPhoto photo = OldPhoto.Parse(id, extradata, GameData.Hotel);
-
-            ApiResponse<OldPhoto> photoPublishResponse = await ApiClient.PublishPhotoDataAsync(photo, ownerName, roomId);
-
-            if (!ImageCache.ContainsKey(id) && !Photos.ContainsKey(id) && photoPublishResponse.Success)
-            {
-                Photos.Add(id, photoPublishResponse.Data);
-                ImageCache.Add(id, photoPublishResponse.Data.CreateDateImage(await ApiClient.GetPhotoAsync(new Uri(photoPublishResponse.Data.Url))));
-                _ui.Update();
-            }
-        }
-
-        private async void RoomWallItemsLoaded(DataInterceptedEventArgs e)
+        private async void OnWallItems(DataInterceptedEventArgs e)
         {
             e.Continue();
 
             LoadingPhotos = PhotoLoadType.Room;
 
             List<HWallItem> items = HWallItem.Parse(e.Packet).ToList().FindAll(i => i.TypeId == 3 && !Photos.ContainsKey(i.Id) && !RoomItemsQueue.Contains(i.Id) && !ExtraPhotoData.ContainsKey(i.Id));
-            int[] itemIds = await ApiClient.BatchCheckExistingIdsAsync(items.Select(i => i.Id).ToArray(), GameData.Hotel);
+            int[] itemIds = await ApiClient.BatchCheckExistingIdsAsync(items.Select(i => i.Id).ToArray(), Hotel);
 
             HabboAlert alert = AlertBuilder.CreateAlert(HabboAlertType.Bubble,
                 (items.Count == 0 ? Constants.SCANNING_EMPTY : items.Count.ToString())
                 + (items.Count == 0 || items.Count > 1 ? Constants.SCANNING_MULTI : Constants.SCANNING_SINGLE)
                 + Constants.SCANNING_WALLITEMS_DONE + itemIds.Length + Constants.SCANNING_WALLITEMS_UNDISC)
-                .ImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_DEFAULT_PATH);
+                .WithImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_DEFAULT_PATH);
 
             await Connection.SendToClientAsync(alert.ToPacket(In.NotificationDialog));
 
@@ -260,15 +265,30 @@ namespace HabboGallery
             ProgressRoomItemsQueue();
         }
 
+        private async Task ProcessPhotoDataAsync(int id, string extradata, string ownerName, int roomId = 0)
+        {
+            OldPhoto photo = OldPhoto.Parse(id, extradata, Hotel);
+
+            ApiResponse<OldPhoto> photoPublishResponse = await ApiClient.PublishPhotoDataAsync(photo, ownerName, roomId);
+
+            if (!ImageCache.ContainsKey(id) && !Photos.ContainsKey(id) && photoPublishResponse.Success)
+            {
+                Photos.Add(id, photoPublishResponse.Data);
+                ImageCache.Add(id, photoPublishResponse.Data.CreateDateImage(await ApiClient.GetImageAsync(new Uri(photoPublishResponse.Data.Url))));
+                
+                _ui.OnPhotoQueueUpdate();
+            }
+        }
         private async Task GetKnownPhotoByIdAsync(int photoId)
         {
-            ApiResponse<OldPhoto> photoResponse = await ApiClient.GetPhotoByIdAsync(photoId, GameData.Hotel);
+            ApiResponse<OldPhoto> photoResponse = await ApiClient.GetPhotoByIdAsync(photoId, Hotel);
 
             if (!ImageCache.ContainsKey(photoId) && !Photos.ContainsKey(photoId) && photoResponse.Success)
             {
                 Photos.Add(photoId, photoResponse.Data);
-                ImageCache.Add(photoId, photoResponse.Data.CreateDateImage(await ApiClient.GetPhotoAsync(new Uri(photoResponse.Data.Url))));
-                _ui.Update();
+                ImageCache.Add(photoId, photoResponse.Data.CreateDateImage(await ApiClient.GetImageAsync(new Uri(photoResponse.Data.Url))));
+                
+                _ui.OnPhotoQueueUpdate();
             }
         }
 
@@ -277,66 +297,69 @@ namespace HabboGallery
             if (!_waitingForPostItData && RoomItemsQueue.Count > 0)
             {
                 _waitingForPostItData = true;
-                await Connection.SendToServerAsync(Out.PostItRequestData, RoomItemsQueue.First());
+                await Connection.SendToServerAsync(Out.GetItemData, RoomItemsQueue.First());
             }
             else if (RoomItemsQueue.Count == 0)
             {
-                _ui.UpdateRoomItemsQueueStatusMessage();
+                _ui.UpdateQueueStatus(RoomItemsQueue.Count);
+
                 LoadingPhotos = PhotoLoadType.None;
             }
         }
 
-        public async void SendPhoto(OldPhoto photo)
+        public async Task SendPhotoAsync(OldPhoto photo)
         {
             byte[] compressed = Flazzy.Compression.ZLIB.Compress(Encoding.UTF8.GetBytes(PhotoConverter.OldToNew(photo, _ui.GetZoomValue()).ToString()));
-            await Connection.SendToServerAsync(Out.CameraRoomPicture, compressed.Length, compressed);
+            await Connection.SendToServerAsync(Out.RenderRoom, compressed.Length, compressed);
         }
 
         private void BuyPhotoBtn_Click(object sender, EventArgs e)
         {
             _waitingForPreview = true;
-            BuyPhotoBtn.Enabled = false;
-            BuyPhotoBtn.BackgroundImage = Resources.DisabledBuyButton;
-            PublishToWebBtn.Enabled = false;
-            PublishToWebBtn.BackgroundImage = Resources.DisabledPublishButton;
+
+            BuyBtn.Enabled = false;
+            Resources.RenderButtonState(BuyBtn, BuyBtn.Enabled);
+
+            PublishBtn.Enabled = false;
+            Resources.RenderButtonState(PublishBtn, PublishBtn.Enabled);
+
             IndexDisplayLbl.Text = Constants.PURCHASE_LOADING;
             BuyType = 1;
-            SendPhoto(CurrentPhoto);
+
+            SendPhotoAsync(CurrentPhoto);
         }
 
         private void PreviousPhotoBtn_Click(object sender, EventArgs e)
         {
             CurrentIndex--;
-            _ui.Update();
+            _ui.OnPhotoQueueUpdate();
         }
         private void NextPhotoBtn_Click(object sender, EventArgs e)
         {
             CurrentIndex++;
-            _ui.Update();
+            _ui.OnPhotoQueueUpdate();
         }
 
         private void PublishToWebBtn_Click(object sender, EventArgs e)
         {
             _waitingForPreview = true;
-            BuyPhotoBtn.Enabled = false;
-            BuyPhotoBtn.BackgroundImage = Resources.DisabledBuyButton;
-            PublishToWebBtn.Enabled = false;
-            PublishToWebBtn.BackgroundImage = Resources.DisabledPublishButton;
+
+            BuyBtn.Enabled = false;
+            Resources.RenderButtonState(BuyBtn, BuyBtn.Enabled);
+
+            PublishBtn.Enabled = false;
+            Resources.RenderButtonState(PublishBtn, PublishBtn.Enabled);
+
             IndexDisplayLbl.Text = Constants.PURCHASE_LOADING;
             BuyType = 2;
-            SendPhoto(CurrentPhoto);
-        }
 
-        public bool PreFilterMessage(ref Message m)
-        {
-            return _ui.DragControl(ref m);
+            SendPhotoAsync(CurrentPhoto);
         }
 
         private void HotelExtensionUpBtn_Click(object sender, EventArgs e)
         {
             _ui.RotateZoomCarousel(CarouselDirection.Up);
         }
-
         private void HotelExtensionDownBtn_Click(object sender, EventArgs e)
         {
             _ui.RotateZoomCarousel(CarouselDirection.Down);
@@ -355,12 +378,14 @@ namespace HabboGallery
             {
                 if (await ApiClient.LoginAsync(LoginEmailTxt.Text, LoginPasswordTxt.Text))
                 {
-                    Settings.Default.Email = LoginEmailTxt.Text;
-                    Settings.Default.Password = LoginPasswordTxt.Text;
-                    SaveSettings();
+                    Configuration.Email = LoginEmailTxt.Text;
+                    if (RememberMeBx.Checked)
+                    {
+                        Configuration.Password = LoginPasswordTxt.Text;
+                    }
 
                     _ui.HideLogin();
-                    await AfterLogin().ConfigureAwait(false);
+                    await AfterLoginAsync().ConfigureAwait(false);
                 }
                 else _ui.SetLoginMessage(Constants.LOGIN_FAILED, true);
             }
@@ -373,41 +398,35 @@ namespace HabboGallery
         private void MainFrm_Load(object sender, EventArgs e)
         {
             TerminateProxy();
+            
             InitializeSettings();
         }
 
         private void InitializeSettings()
         {
-            if (Settings.Default.AutoLogin)
+            if (Configuration.RememberMe)
             {
-                LoginEmailTxt.Text = Settings.Default.Email;
-                LoginPasswordTxt.Text = Settings.Default.Password;
-                AutoLoginBx.Checked = true;
+                LoginEmailTxt.Text = Configuration.Email;
+                LoginPasswordTxt.Text = Configuration.Password;
+                RememberMeBx.Checked = true;
             }
         }
 
-        private void AutoLoginBx_CheckedChanged(object sender, EventArgs e)
+        private void RememberMeBx_CheckedChanged(object sender, EventArgs e)
         {
-            Settings.Default.AutoLogin = AutoLoginBx.Checked;
-            SaveSettings();
+            Configuration.RememberMe = RememberMeBx.Checked;
         }
-
-        public void SaveSettings()
-        {
-            Settings.Default.Save();
-            Settings.Default.Reload();
-        }
-
-        public HotelEndPoint HotelServer { get; set; }
 
         private Task InjectGameClientAsync(object sender, RequestInterceptedEventArgs e)
         {
-            if (!e.Uri.Query.StartsWith("?" + _randomQuery)) return null;
+            if (!e.Uri.Query.StartsWith("?" + _randomQuery)) return Task.CompletedTask;
 
             Eavesdropper.RequestInterceptedAsync -= InjectGameClientAsync;
 
             Uri remoteUrl = e.Request.RequestUri;
-            string clientPath = Path.Combine(AppDataPath, $@"{Constants.MODDED_CLIENTS_FOLDER_NAME}\{remoteUrl.Host}\{remoteUrl.LocalPath}");
+
+            string clientPath = Path.Combine(Master.DataDirectory.FullName,
+                $@"{Constants.MODDED_CLIENTS_FOLDER_NAME}\{remoteUrl.Host}\{remoteUrl.LocalPath}");
 
             if (!File.Exists(clientPath))
             {
@@ -417,53 +436,50 @@ namespace HabboGallery
             else
             {
                 _ui.SetStatusMessage(Constants.DISASSEMBLING_CLIENT);
-                Game = new HGame(clientPath);
-                Game.Disassemble();
+                using var game = new HGame(clientPath);
+                game.Disassemble();
 
-                if (Game.IsPostShuffle)
-                {
-                    _ui.SetStatusMessage(Constants.GENERATING_MESSAGE_HASHES);
-                    Game.GenerateMessageHashes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constants.HASHES_FILE_NAME));
-                }
-                In = Game.In;
-                Out = Game.Out;
+                _ui.SetStatusMessage(Constants.GENERATING_MESSAGE_HASHES);
+                game.GenerateMessageHashes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constants.HASHES_FILE_NAME));
 
-                TerminateProxy();
+                In = game.In;
+                Out = game.Out;
+
                 InterceptConnectionAsync().ConfigureAwait(false);
+
                 e.Request = WebRequest.Create(new Uri(clientPath));
+                TerminateProxy();
             }
 
-            return null;
+            return Task.CompletedTask;
         }
-
         private async Task InterceptGameClientAsync(object sender, ResponseInterceptedEventArgs e)
         {
             if (!e.Uri.Query.StartsWith("?" + _randomQuery)) return;
             if (e.ContentType != Constants.CONTENT_TYPE_FLASH) return;
             Eavesdropper.ResponseInterceptedAsync -= InterceptGameClientAsync;
 
-            string clientPath = Path.Combine(AppDataPath, $@"{Constants.MODDED_CLIENTS_FOLDER_NAME}\{e.Uri.Host}\{e.Uri.LocalPath}");
+            string clientPath = Path.Combine(Master.DataDirectory.FullName, $@"{Constants.MODDED_CLIENTS_FOLDER_NAME}\{e.Uri.Host}\{e.Uri.LocalPath}"); ;
             string clientDirectory = Path.GetDirectoryName(clientPath);
             Directory.CreateDirectory(clientDirectory);
 
             _ui.SetStatusMessage(Constants.DISASSEMBLING_CLIENT);
-            Game = new HGame(await e.Content.ReadAsStreamAsync().ConfigureAwait(false)) { Location = clientPath };
-            Game.Disassemble();
+            using var game = new HGame(await e.Content.ReadAsStreamAsync().ConfigureAwait(false));
+            game.Location = clientPath;
+            
+            game.Disassemble();
 
-            if (Game.IsPostShuffle)
-            {
-                _ui.SetStatusMessage(Constants.GENERATING_MESSAGE_HASHES);
-                Game.GenerateMessageHashes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constants.HASHES_FILE_NAME));
+            _ui.SetStatusMessage(Constants.GENERATING_MESSAGE_HASHES);
+            game.GenerateMessageHashes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constants.HASHES_FILE_NAME));
 
-                _ui.SetStatusMessage(Constants.MODIFYING_CLIENT);
-                Game.DisableHostChecks();
-                Game.InjectKeyShouter(4001);
-                Game.InjectEndPointShouter(4000);
-            }
+            In = game.In;
+            Out = game.Out;
 
-            In = Game.In;
-            Out = Game.Out;
-            Game.InjectEndPoint(Constants.LOCALHOST_ENDPOINT, Connection.ListenPort);
+            _ui.SetStatusMessage(Constants.MODIFYING_CLIENT);
+            game.DisableHostChecks();
+            game.InjectKeyShouter(4001);
+            game.InjectEndPointShouter(4000);
+            game.InjectEndPoint("127.0.0.1", Connection.ListenPort);
 
             CompressionKind compression = CompressionKind.ZLIB;
 #if DEBUG
@@ -471,13 +487,13 @@ namespace HabboGallery
 #endif
 
             _ui.SetStatusMessage(Constants.ASSEMBLING_CLIENT);
-            byte[] payload = Game.ToArray(compression);
+            byte[] payload = game.ToArray(compression);
             e.Headers[HttpResponseHeader.ContentLength] = payload.Length.ToString();
 
             e.Content = new ByteArrayContent(payload);
             using (FileStream clientStream = File.Open(clientPath, FileMode.Create, FileAccess.Write))
             {
-                clientStream.Write(payload, 0, payload.Length);
+                clientStream.Write(payload);
             }
 
             TerminateProxy();
@@ -492,15 +508,14 @@ namespace HabboGallery
             if (!body.Contains("info.host") && !body.Contains("info.port")) return;
 
             Eavesdropper.ResponseInterceptedAsync -= InterceptClientPageAsync;
-            GameData.Source = body;
+            Master.GameData.Source = body;
 
-            body = body.Replace(".swf", $".swf?{(_randomQuery = Guid.NewGuid())}");
+            body = body.Replace(".swf", $".swf?{_randomQuery = Guid.NewGuid()}");
             e.Content = new StringContent(body);
 
             _ui.SetStatusMessage(Constants.INJECTING_CLIENT);
             Eavesdropper.RequestInterceptedAsync += InjectGameClientAsync;
         }
-
 
         private void TerminateProxy()
         {
@@ -509,15 +524,13 @@ namespace HabboGallery
             Eavesdropper.ResponseInterceptedAsync -= InterceptClientPageAsync;
             Eavesdropper.ResponseInterceptedAsync -= InterceptGameClientAsync;
         }
+
         private async Task InterceptConnectionAsync()
         {
             _ui.SetStatusMessage(Constants.INTERCEPTING_CONNECTION);
             await Connection.InterceptAsync(HotelServer).ConfigureAwait(false);
-
         }
 
-        public bool IsIncomingEncrypted { get; private set; }
-        public bool HasBeenClosed { get; private set; }
 
         public async void HandleOutgoing(object sender, DataInterceptedEventArgs e)
         {
@@ -527,6 +540,7 @@ namespace HabboGallery
                 if (e.Packet.Id == Out.GetUserProfileByName)
                 {
                     var eventResponse = EventResponse.Parse(e.Packet);
+
                     if (eventResponse.Name == Constants.RESPONSE_NAME_CLOSE_FORM)
                         Connection.Disconnect();
                 }
@@ -538,7 +552,7 @@ namespace HabboGallery
                 string sharedKeyHex = e.Packet.ReadUTF8();
                 if (sharedKeyHex.Length % 2 != 0)
                 {
-                    sharedKeyHex = ("0" + sharedKeyHex);
+                    sharedKeyHex = "0" + sharedKeyHex;
                 }
 
                 byte[] sharedKey = Enumerable.Range(0, sharedKeyHex.Length / 2)
@@ -556,44 +570,40 @@ namespace HabboGallery
 
                 e.IsBlocked = true;
             }
-            else if (e.Packet.Id == Out.InfoRetrieve)
+            else if (e.Packet.Id == Out.InfoRetrieve) //TODO: Clean up init
             {
-                _datagramListener = new DatagramListener(Constants.DATAGRAM_LISTEN_PORT);
+                _datagramListener = new UdpListener(Constants.UDP_LISTENER_PORT);
                 _datagramListener.BuyRequestReceived += ExternalBuyRequestReceived;
-                _datagramListener.Listen();
+                 _ = _datagramListener.ListenAsync(); //TODO:
 
-                if (Settings.Default.FirstTimeConnecting)
+                if (Configuration.IsFirstConnect)
                 {
-                    Settings.Default.FirstTimeConnecting = false;
-                    SaveSettings();
+                    Configuration.IsFirstConnect = true;
 
                     TourRunning = true;
+                
                     Tour = new NewUserTour(Connection, _ui, In.NotificationDialog, In.InClientLink);
-                    await Tour.StartAsync();
+                    await Tour.ShowIntroDialogAsync();
                 }
                 else
                 {
                     HabboAlert alert = AlertBuilder.CreateAlert(HabboAlertType.Bubble, Constants.APP_CONNECT_SUCCESS)
-                        .ImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_DEFAULT_PATH);
-
+                        .WithImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_DEFAULT_PATH);
+                
                     await Connection.SendToClientAsync(alert.ToPacket(In.NotificationDialog));
                 }
 
-                if (GameData.Hotel == HHotel.Com || GameData.Hotel == HHotel.ComTr)
+                if (Hotel == HHotel.Com || Hotel == HHotel.ComTr)
                 {
-                    if (Settings.Default.VisitedHotels.Contains(GameData.Hotel.ToDomain())) return;
-
-                    Settings.Default.VisitedHotels.Add(GameData.Hotel.ToDomain());
-                    SaveSettings();
+                    if (Configuration.VisitedHotels.Contains(Hotel.ToDomain())) return;
+                    Configuration.VisitedHotels.Add(Hotel.ToDomain());
 
                     HabboAlert countryIssueAlert = AlertBuilder.CreateAlert(HabboAlertType.PopUp,
-                            GameData.Hotel == HHotel.ComTr
-                                ? Constants.PHOTO_ISSUE_DIALOG_BODY_TR
-                                : Constants.PHOTO_ISSUE_DIALOG_BODY_US)
-                        .Title(Constants.PHOTO_ISSUE_DIALOG_TITLE)
-                        .EventTitle(Constants.PHOTO_ISSUE_DIALOG_EVENT_TITLE)
-                        .EventUrl(string.Empty)
-                        .ImageUrl(Constants.PHOTO_ISSUE_DIALOG_IMAGE_URL);
+                        Hotel == HHotel.ComTr ? Constants.PHOTO_ISSUE_DIALOG_BODY_TR : Constants.PHOTO_ISSUE_DIALOG_BODY_US)
+                        .WithTitle(Constants.PHOTO_ISSUE_DIALOG_TITLE)
+                        .WithEventTitle(Constants.PHOTO_ISSUE_DIALOG_EVENT_TITLE)
+                        .WithEventUrl(string.Empty)
+                        .WithImageUrl(Constants.PHOTO_ISSUE_DIALOG_IMAGE_URL);
 
                     await Connection.SendToClientAsync(countryIssueAlert.ToPacket(In.NotificationDialog));
                 }
@@ -601,6 +611,7 @@ namespace HabboGallery
             else if (e.Packet.Id == Out.FindNewFriends && TourRunning)
             {
                 e.Continue();
+
                 await Task.Delay(3000);
                 await Tour.ShowGuideStartedMessageAsync();
             }
@@ -615,20 +626,23 @@ namespace HabboGallery
                 switch (response.Name)
                 {
                     case Constants.RESPONSE_NAME_NUT:
-                        await Tour.ShowNextHelpBubbleAsync(); break;
-                    case Constants.RESPONSE_NAME_EXTERNAL_BUY:
-                    {
-                        OldPhoto photo = UnconfirmedExternalBuyRequests.Find(p => IdentifierFromUrl(p.Url) == response.Data);
-                        if (photo != null)
-                        {
-                            BuyType = 1;
-                            _waitingForPreview = true;
-                            SendPhoto(photo);
-                        }
+                        await Tour.ShowNextHelpBubbleAsync();
                         break;
-                    }
+                    case Constants.RESPONSE_NAME_EXTERNAL_BUY:
+                        {
+                            OldPhoto photo = UnconfirmedExternalBuyRequests.Find(p => IdentifierFromUrl(p.Url) == response.Data);
+                            if (photo != null)
+                            {
+                                BuyType = 1;
+                                _waitingForPreview = true;
+
+                                SendPhotoAsync(photo);
+                            }
+                            break;
+                        }
                     case Constants.RESPONSE_NAME_CLOSE_FORM:
-                        Connection.Disconnect(); break;
+                        Connection.Disconnect();
+                        break;
                 }
             }
             else if (e.Packet.Id == Out.Username && string.IsNullOrWhiteSpace(UsernameOfSession))
@@ -643,12 +657,12 @@ namespace HabboGallery
                 if (ImageCache.ContainsKey(furniId))
                 {
                     CurrentIndex = Photos.Values.ToList().FindIndex(p => p.Id == furniId);
-                    _ui.Update();
+                    _ui.OnPhotoQueueUpdate();
                 }
             }
         }
 
-        public string IdentifierFromUrl(string url)
+        public string IdentifierFromUrl(string url) 
             => url.Remove(0, 24).Split('.')[0];
 
         private async void ExternalBuyRequestReceived(object sender, OldPhoto e)
@@ -657,12 +671,16 @@ namespace HabboGallery
                 return;
 
             UnconfirmedExternalBuyRequests.Add(e);
-            string padding = new string(' ', Constants.EXTERNAL_BUY_DIALOG_SPACE_COUNT);
+
+            string paddedAlertTitle = Constants.EXTERNAL_BUY_DIALOG_EVENT_TITLE
+                .PadLeft(Constants.EXTERNAL_BUY_DIALOG_SPACE_COUNT)
+                .PadRight(Constants.EXTERNAL_BUY_DIALOG_SPACE_COUNT);
+
             HabboAlert alert = AlertBuilder.CreateAlert(HabboAlertType.PopUp, Constants.EXTERNAL_BUY_DIALOG_BODY)
-                .EventTitle($"{padding}{Constants.EXTERNAL_BUY_DIALOG_EVENT_TITLE}{padding}")
-                .Title(Constants.EXTERNAL_BUY_DIALOG_TITLE)
-                .ImageUrl("https:" + e.Url)
-                .EventUrl(new EventResponse(Constants.RESPONSE_NAME_EXTERNAL_BUY, IdentifierFromUrl(e.Url)).ToEventString());
+                .WithEventTitle(paddedAlertTitle)
+                .WithTitle(Constants.EXTERNAL_BUY_DIALOG_TITLE)
+                .WithImageUrl("https:" + e.Url)
+                .WithEventUrl(new EventResponse(Constants.RESPONSE_NAME_EXTERNAL_BUY, IdentifierFromUrl(e.Url)).ToEventString());
 
             await Connection.SendToClientAsync(alert.ToPacket(In.NotificationDialog));
         }
@@ -691,21 +709,20 @@ namespace HabboGallery
             {
                 OnPreviewLoaded(e);
             }
-            else if (e.Packet.Id == In.PostItData)
+            else if (e.Packet.Id == In.ItemDataUpdate)
             {
-                OnPostItDataReceived(e);
+                OnItemData(e);
             }
-            else if (e.Packet.Id == In.RoomWallItems)
+            else if (e.Packet.Id == In.Items)
             {
                 if (LoadingPhotos == PhotoLoadType.None)
                 {
-                    RoomWallItemsLoaded(e);
+                    OnWallItems(e);
                 }
                 else if (LoadingPhotos == PhotoLoadType.Inventory)
                 {
-                    HabboAlert alert =
-                        AlertBuilder.CreateAlert(HabboAlertType.Bubble, Constants.STILL_BUSY_DIALOG_INV_BODY)
-                            .ImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_DEFAULT_PATH);
+                    HabboAlert alert = AlertBuilder.CreateAlert(HabboAlertType.Bubble, Constants.STILL_BUSY_DIALOG_INV_BODY)
+                            .WithImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_DEFAULT_PATH);
 
                     await Connection.SendToClientAsync(alert.ToPacket(In.NotificationDialog));
                 }
@@ -713,25 +730,25 @@ namespace HabboGallery
                 {
                     foreach (int id in RoomItemsQueue)
                     {
-                        if (Photos.ContainsKey(id))
-                            Photos.Remove(id);
-                        if (ExtraPhotoData.ContainsKey(id))
-                            ExtraPhotoData.Remove(id);
+                        Photos.Remove(id);
+                        ExtraPhotoData.Remove(id);
                     }
+
                     RoomItemsQueue.Clear();
-                    _ui.Update();
-                    _ui.UpdateRoomItemsQueueStatusMessage();
+                    
+                    _ui.OnPhotoQueueUpdate();
+                    _ui.UpdateQueueStatus(RoomItemsQueue.Count);
+
                     _waitingForPostItData = false;
 
                     HabboAlert alert =
                         AlertBuilder.CreateAlert(HabboAlertType.Bubble, Constants.STILL_BUSY_DIALOG_NEWROOM_BODY)
-                            .ImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_DEFAULT_PATH);
+                            .WithImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_DEFAULT_PATH);
 
                     await Connection.SendToClientAsync(alert.ToPacket(In.NotificationDialog));
 
-                    RoomWallItemsLoaded(e);
+                    OnWallItems(e);
                 }
-
             }
             else if (e.Packet.Id == In.FriendFindingRoom)
             {
@@ -755,7 +772,7 @@ namespace HabboGallery
                 _inventoryItemsRequested = true;
 
                 HabboAlert alert = AlertBuilder.CreateAlert(HabboAlertType.Bubble, Constants.SCANNING_INVENTORY)
-                    .ImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_DEFAULT_PATH);
+                    .WithImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_DEFAULT_PATH);
 
                 await Connection.SendToClientAsync(alert.ToPacket(In.NotificationDialog));
                 await Connection.SendToServerAsync(Out.TestInventory);
@@ -764,7 +781,7 @@ namespace HabboGallery
             {
                 HabboAlert alert =
                     AlertBuilder.CreateAlert(HabboAlertType.Bubble, Constants.STILL_BUSY_DIALOG_ROOM_BODY)
-                        .ImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_DEFAULT_PATH);
+                        .WithImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_DEFAULT_PATH);
 
                 await Connection.SendToClientAsync(alert.ToPacket(In.NotificationDialog));
             }
@@ -772,7 +789,7 @@ namespace HabboGallery
 
         private void LoginTitleLbl_Click(object sender, EventArgs e)
         {
-            Process.Start(Constants.BASE_URL + Constants.REGISTER_URL);
+            Process.Start(new ProcessStartInfo(Constants.BASE_URL + "register") { UseShellExecute = true });
         }
 
         private async void MainFrm_FormClosing(object sender, FormClosingEventArgs e)
@@ -786,8 +803,8 @@ namespace HabboGallery
 
                 HabboAlert alert =
                     AlertBuilder.CreateAlert(HabboAlertType.Bubble, Constants.FORM_CLOSED_DIALOG_BODY)
-                        .ImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_DEFAULT_PATH)
-                        .EventUrl(new EventResponse(Constants.RESPONSE_NAME_CLOSE_FORM, string.Empty).ToEventString());
+                        .WithImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_DEFAULT_PATH)
+                        .WithEventUrl(new EventResponse(Constants.RESPONSE_NAME_CLOSE_FORM, string.Empty).ToEventString());
 
                 await Connection.SendToClientAsync(alert.ToPacket(In.NotificationDialog));
             }
@@ -795,22 +812,21 @@ namespace HabboGallery
 
         private void ExportCertificateBtn_Click(object sender, EventArgs e)
         {
-            var result = CertLocationDlg.ShowDialog();
+            using var certExportDlg = new FolderBrowserDialog();
 
-            if (result == DialogResult.OK)
+            if (certExportDlg.ShowDialog(this) == DialogResult.OK)
             {
-                string path = CertLocationDlg.SelectedPath;
+                string path = certExportDlg.SelectedPath;
+
                 try
                 {
-                    Eavesdropper.Certifier.ExportTrustedRootCertificate(Path.Combine(path, Constants.CERT_CERTIFICATE_NAME + Constants.CERT_FILE_EXTENSION));
-                    Process.Start(path);
+                    Eavesdropper.Certifier.ExportTrustedRootCertificate(Path.Combine(path, Eavesdropper.Certifier.CertificateAuthorityName + ".cer"));
                 }
                 catch (UnauthorizedAccessException)
                 {
                     MessageBox.Show(Constants.EXP_CERT_UNAUTH_BODY, Constants.EXP_CERT_UNAUTH_TITLE, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
-
         }
     }
 }

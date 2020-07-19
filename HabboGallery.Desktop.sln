@@ -1,13 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.136
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30028.174
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HabboGallery.Desktop", "HabboGallery.Desktop\HabboGallery.Desktop.csproj", "{08317E61-A87C-4326-8BFE-A43EE0C8199E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HabboGallery.Desktop", "HabboGallery.Desktop\HabboGallery.Desktop.csproj", "{08317E61-A87C-4326-8BFE-A43EE0C8199E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sulakore", "Submodules\Sulakore\Sulakore\Sulakore.csproj", "{7CDA2120-D991-413E-BB3E-38EEAAC1ED24}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eavesdrop", "Submodules\Eavesdrop\Eavesdrop\Eavesdrop.csproj", "{29AB109A-8343-45A9-A91E-0F54211FDD45}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Eavesdrop", "Submodules\Eavesdrop\Eavesdrop\Eavesdrop.csproj", "{29AB109A-8343-45A9-A91E-0F54211FDD45}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Flazzy", "Submodules\Sulakore\Submodules\Flazzy\Flazzy\Flazzy.csproj", "{EBBE6014-86A3-4FA4-99E1-CAA9902E70E7}"
 EndProject
@@ -23,12 +23,12 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{08317E61-A87C-4326-8BFE-A43EE0C8199E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{08317E61-A87C-4326-8BFE-A43EE0C8199E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{08317E61-A87C-4326-8BFE-A43EE0C8199E}.Debug|x64.ActiveCfg = Debug|x64
-		{08317E61-A87C-4326-8BFE-A43EE0C8199E}.Debug|x64.Build.0 = Debug|x64
+		{08317E61-A87C-4326-8BFE-A43EE0C8199E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{08317E61-A87C-4326-8BFE-A43EE0C8199E}.Debug|x64.Build.0 = Debug|Any CPU
 		{08317E61-A87C-4326-8BFE-A43EE0C8199E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{08317E61-A87C-4326-8BFE-A43EE0C8199E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{08317E61-A87C-4326-8BFE-A43EE0C8199E}.Release|x64.ActiveCfg = Release|x64
-		{08317E61-A87C-4326-8BFE-A43EE0C8199E}.Release|x64.Build.0 = Release|x64
+		{08317E61-A87C-4326-8BFE-A43EE0C8199E}.Release|x64.ActiveCfg = Release|Any CPU
+		{08317E61-A87C-4326-8BFE-A43EE0C8199E}.Release|x64.Build.0 = Release|Any CPU
 		{7CDA2120-D991-413E-BB3E-38EEAAC1ED24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7CDA2120-D991-413E-BB3E-38EEAAC1ED24}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7CDA2120-D991-413E-BB3E-38EEAAC1ED24}.Debug|x64.ActiveCfg = Debug|Any CPU

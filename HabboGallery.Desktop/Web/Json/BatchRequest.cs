@@ -1,20 +1,16 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
-namespace HabboGallery.Web.Json
+namespace HabboGallery.Desktop.Web.Json
 {
-    [JsonObject(MemberSerialization.OptIn)]
     public class BatchRequest
     {
-        [JsonProperty("login_key")]
+        [JsonPropertyName("login_key")]
         public string LoginKey { get; set; }
-        [JsonProperty("country_code")]
+
+        [JsonPropertyName("country_code")]
         public string CountryCode { get; set; }
-        [JsonProperty("photo_ids")]
+
+        [JsonPropertyName("photo_ids")]
         public int[] PhotoIds { get; set; }
 
         public BatchRequest(string loginKey, string countryCode, int[] photoIds)

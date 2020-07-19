@@ -1,22 +1,22 @@
 ﻿using System.Threading.Tasks;
 
-using HabboGallery.UI;
-using HabboGallery.Properties;
-using HabboGallery.Habbo.Network;
+using HabboGallery.Desktop.UI;
+using HabboGallery.Desktop.Habbo.Events;
+using HabboGallery.Desktop.Habbo.Network;
 
 using HabboAlerts;
-using HabboGallery.Habbo.Events;
 
-namespace HabboGallery.Habbo.Guidance
+namespace HabboGallery.Desktop.Habbo.Guidance
 {
     public class NewUserTour
     {
-        private readonly HConnection _connection;
         private readonly UIUpdater _ui;
+        private readonly HConnection _connection;
 
         private readonly ushort _alertId;
         private readonly ushort _executeEventId;
         private int _guideHelpBubbleStep;
+
         private const string IntroDialogTitle = "HabboGallery - New User Guide";
         private const string IntroDialogBody = "<b><font size=\"15\">Welcome to HabboGallery!</font></b><br/><br/>If you see this message," +
                                                " that means you've <b><font color=\"#006400\">successfully connected</font></b> HabboGallery to" +
@@ -49,18 +49,18 @@ namespace HabboGallery.Habbo.Guidance
 
         public NewUserTour(HConnection connection, UIUpdater ui, ushort alertId, ushort executeEventId)
         {
-            _connection = connection;
             _ui = ui;
             _alertId = alertId;
+            _connection = connection;
             _executeEventId = executeEventId;
         }
 
-        public async Task StartAsync()
+        public async Task ShowIntroDialogAsync()
         {
             HabboAlert alert = AlertBuilder.CreateAlert(HabboAlertType.PopUp, IntroDialogBody)
-                .Title(IntroDialogTitle)
-                .EventTitle(IntroDialogEventTitle)
-                .EventUrl(HabboEvents.FindFriends);
+                .WithTitle(IntroDialogTitle)
+                .WithEventTitle(IntroDialogEventTitle)
+                .WithEventUrl(HabboEvents.FindFriends);
 
             await _connection.SendToClientAsync(alert.ToPacket(_alertId));
         }
@@ -68,9 +68,9 @@ namespace HabboGallery.Habbo.Guidance
         public async Task ShowGuideStartedMessageAsync()
         {
             HabboAlert alert = AlertBuilder.CreateAlert(HabboAlertType.PopUp, StartingDialogBody)
-                .EventTitle(StartingDialogEventTitle)
-                .EventUrl(new EventResponse(Constants.RESPONSE_NAME_NUT, string.Empty).ToEventString())
-                .Title(StartingDialogTitle);
+                .WithEventTitle(StartingDialogEventTitle)
+                .WithEventUrl(new EventResponse(Constants.RESPONSE_NAME_NUT, string.Empty).ToEventString())
+                .WithTitle(StartingDialogTitle);
 
             await _connection.SendToClientAsync(alert.ToPacket(_alertId));
         }
@@ -82,29 +82,29 @@ namespace HabboGallery.Habbo.Guidance
                 case 0:
                 {
                     await _connection.SendToClientAsync(_executeEventId, HabboEvents.ShowHelpBubble(HabboUIControl.BOTTOM_BAR_INVENTORY, HelpbubbleInventoryBody));
-                    _ui.FlashButton(ButtonFlash.InventorySearch);
+                    _ui.StartFlashingButtonAsync(ButtonFlash.InventorySearch);
                     break;
                 }
                 case 1:
                 {
                     await _connection.SendToClientAsync(_executeEventId, HabboEvents.ShowHelpBubble(HabboUIControl.CREDITS_BUTTON, HelpbubbleBuyPhotoBody));
-                    _ui.FlashButton(ButtonFlash.Purchase);
+                    _ui.StartFlashingButtonAsync(ButtonFlash.Purchase);
                     break;
                 }
                 case 2:
                 {
                     await _connection.SendToClientAsync(_executeEventId, HabboEvents.ShowHelpBubble(HabboUIControl.DUCKETS_BUTTON, HelpbubblePublishPhotoBody));
-                    _ui.FlashButton(ButtonFlash.PublishToWeb);
+                    _ui.StartFlashingButtonAsync(ButtonFlash.PublishToWeb);
                     break;
                 }
                 case 3:
                 {
                     HabboAlert alert = AlertBuilder.CreateAlert(HabboAlertType.PopUp, OutroDialogBody)
-                        .EventTitle(OutroDialogEventTitle)
-                        .Title(OutroDialogTitle)
-                        .EventUrl(OutroDialogEventUrl, true);
+                        .WithEventTitle(OutroDialogEventTitle)
+                        .WithTitle(OutroDialogTitle)
+                        .WithEventUrl(OutroDialogEventUrl, true);
 
-                    _ui.FlashButton(ButtonFlash.None);
+                    _ui.StartFlashingButtonAsync(ButtonFlash.None);
                     await _connection.SendToClientAsync(alert.ToPacket(_alertId));
 
                     _ui.Target.TourRunning = false;

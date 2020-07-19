@@ -1,14 +1,13 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
-namespace HabboGallery.Web.Json
+namespace HabboGallery.Desktop.Web.Json
 {
-    [JsonObject(MemberSerialization.OptIn)]
     public class ApiResponse<T>
     {
-        [JsonProperty("error")]
+        [JsonPropertyName("error")]
         public string Error { get; set; }
 
-        [JsonProperty("data")]
+        [JsonPropertyName("data")]
         public T Data { get; set; }
 
         public bool Success { get; set; }

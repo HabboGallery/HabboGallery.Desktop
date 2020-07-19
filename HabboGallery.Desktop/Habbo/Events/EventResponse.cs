@@ -1,22 +1,18 @@
-﻿using Newtonsoft.Json;
-using Sulakore.Network.Protocol;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 
-namespace HabboGallery.Habbo.Events
+using Sulakore.Network.Protocol;
+
+namespace HabboGallery.Desktop.Habbo.Events
 {
-    [JsonObject(MemberSerialization.OptIn)]
     public class EventResponse
     {
         private const string EVENT_PREFIX = "friendbar/user/";
 
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; private set; }
 
-        [JsonProperty("data")]
+        [JsonPropertyName("data")]
         public string Data { get; private set; }
 
         public EventResponse(string name, string data)
@@ -27,15 +23,11 @@ namespace HabboGallery.Habbo.Events
 
         public static EventResponse Parse(HPacket packet)
         {
-            string json = packet.ReadUTF8();
-            return JsonConvert.DeserializeObject<EventResponse>(json);
+            return JsonSerializer.Deserialize<EventResponse>(packet.ReadUTF8());
         }
-
         public string ToEventString()
         {
-            return EVENT_PREFIX + JsonConvert.SerializeObject(this);
+            return EVENT_PREFIX + JsonSerializer.Serialize(this);
         }
-
-
     }
 }

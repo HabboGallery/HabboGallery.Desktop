@@ -1,4 +1,4 @@
-﻿namespace HabboGallery.UI
+﻿namespace HabboGallery.Desktop.UI
 {
     public enum ButtonFlash
     {

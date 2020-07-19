@@ -1,12 +1,12 @@
-﻿using System.Drawing;
-using System.Collections.Generic;
-using Sulakore.Habbo;
-using Sulakore.Habbo.Layers;
-using System.Linq;
+﻿using System;
 using System.Text;
-using System;
+using System.Linq;
+using System.Drawing;
 
-namespace HabboGallery.Habbo.Camera
+using Sulakore.Habbo;
+using Sulakore.Habbo.Camera;
+
+namespace HabboGallery.Desktop.Habbo.Camera
 {
     public static class PhotoConverter
     {
@@ -19,8 +19,11 @@ namespace HabboGallery.Habbo.Camera
                 Color = 0,
                 IsBottomAligned = false
             };
+
             for (int i = 0; i < 4; i++)
+            {
                 mainPlane.CornerPoints.Add(new Point(0, 0));
+            }
 
             Sprite mainSprite = new Sprite
             {
@@ -43,7 +46,20 @@ namespace HabboGallery.Habbo.Camera
 
         private static string UnfoldStrFill(string filler)
         {
-            return !string.IsNullOrEmpty(filler) ? new string(filler.ToCharArray().Select(_ => { return (char)((_ >= 0x61 && _ <= 0x7A) ? ((_ + 0xD > 0x7A) ? _ - 0xD : _ + 0xD) : (_ >= 0x41 && _ <= 0x5A ? (_ + 0xD > 0x5A ? _ - 0xD : _ + 0xD) : _)); }).ToArray()) : filler;
+            string LESSALLOCATIONS = string.Create(filler.Length, filler,
+                (Span<char> span, string filler) =>
+                {
+                    for (int i = 0; i < filler.Length; i++)
+                    {
+                        char fi = filler[i];
+                        span[i] = (char)((fi >= 0x61 && fi <= 0x7A) ? ((fi + 0xD > 0x7A) ? fi - 0xD : fi + 0xD) : (fi >= 0x41 && fi <= 0x5A ? (fi + 0xD > 0x5A ? fi - 0xD : fi + 0xD) : fi));
+                    }
+                });
+
+            return !string.IsNullOrEmpty(filler) ? new string(filler.ToCharArray().Select(_ => { 
+                return (char)((_ >= 0x61 && _ <= 0x7A) ? 
+                ((_ + 0xD > 0x7A) ? _ - 0xD : _ + 0xD) :
+                (_ >= 0x41 && _ <= 0x5A ? (_ + 0xD > 0x5A ? _ - 0xD : _ + 0xD) : _)); }).ToArray()) : filler;
         }
     }
 }

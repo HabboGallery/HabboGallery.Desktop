@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-
-using Sulakore.Habbo;
+﻿using Sulakore.Habbo;
 using Sulakore.Network.Protocol;
 
-namespace HabboGallery.Habbo
+namespace HabboGallery.Desktop.Habbo
 {
     public class CHItem : HItem
     {
@@ -13,7 +11,7 @@ namespace HabboGallery.Habbo
             : base(packet)
         { }
 
-        public new static IList<CHItem> Parse(HPacket packet)
+        public new static CHItem[] Parse(HPacket packet)
         {
             packet.ReadInt32();
             packet.ReadInt32();

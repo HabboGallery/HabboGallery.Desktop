@@ -1,0 +1,70 @@
+﻿<Project>
+    <ItemGroup>
+      <Content Remove="Resources\Icon.ico" />
+      <Content Remove="Resources\Volter.ttf" />
+
+      <Content Remove="Resources\0.png" />
+      <Content Remove="Resources\1.png" />
+      <Content Remove="Resources\2.png" />
+      <Content Remove="Resources\3.png" />
+      <Content Remove="Resources\4.png" />
+      <Content Remove="Resources\5.png" />
+      <Content Remove="Resources\6.png" />
+      <Content Remove="Resources\7.png" />
+      <Content Remove="Resources\8.png" />
+      <Content Remove="Resources\9.png" />
+      <Content Remove="Resources\Colon.png" />
+      <Content Remove="Resources\Slash.png" />
+      <Content Remove="Resources\Space.png" />
+
+      <Content Remove="Resources\Failed.png" />
+      <Content Remove="Resources\Camera.p.png" />
+      <Content Remove="Resources\Background.png" />
+      <Content Remove="Resources\Placeholder.png" />
+
+      <Content Remove="Resources\SearchBtn.png" />
+      <Content Remove="Resources\SearchBtn_Disabled.png" />
+      <Content Remove="Resources\BuyBtn.png" />
+      <Content Remove="Resources\BuyBtn_Disabled.png" />
+      <Content Remove="Resources\PublishBtn.png" />
+      <Content Remove="Resources\PublishBtn_Disabled.png" />
+      <Content Remove="Resources\NextBtn.png" />
+      <Content Remove="Resources\NextBtn_Disabled.png" />
+      <Content Remove="Resources\PreviousBtn.png" />
+      <Content Remove="Resources\PreviousBtn_Disabled.png" />
+    </ItemGroup>
+    <ItemGroup>
+      <EmbeddedResource Include="Resources\Icon.Ico" />
+      <EmbeddedResource Include="Resources\Volter.ttf" />
+
+      <EmbeddedResource Include="Resources\0.png" />
+      <EmbeddedResource Include="Resources\1.png" />
+      <EmbeddedResource Include="Resources\2.png" />
+      <EmbeddedResource Include="Resources\3.png" />
+      <EmbeddedResource Include="Resources\4.png" />
+      <EmbeddedResource Include="Resources\5.png" />
+      <EmbeddedResource Include="Resources\6.png" />
+      <EmbeddedResource Include="Resources\7.png" />
+      <EmbeddedResource Include="Resources\8.png" />
+      <EmbeddedResource Include="Resources\9.png" />
+      <EmbeddedResource Include="Resources\Colon.png" />
+      <EmbeddedResource Include="Resources\Slash.png" />
+      <EmbeddedResource Include="Resources\Space.png" />
+
+      <EmbeddedResource Include="Resources\Failed.png" />
+      <EmbeddedResource Include="Resources\Camera.p.png" />
+      <EmbeddedResource Include="Resources\Background.png" />
+      <EmbeddedResource Include="Resources\Placeholder.png" />
+
+      <EmbeddedResource Include="Resources\SearchBtn.png" />
+      <EmbeddedResource Include="Resources\SearchBtn_Disabled.png" />
+      <EmbeddedResource Include="Resources\BuyBtn.png" />
+      <EmbeddedResource Include="Resources\BuyBtn_Disabled.png" />
+      <EmbeddedResource Include="Resources\PublishBtn.png" />
+      <EmbeddedResource Include="Resources\PublishBtn_Disabled.png" />
+      <EmbeddedResource Include="Resources\NextBtn.png" />
+      <EmbeddedResource Include="Resources\NextBtn_Disabled.png" />
+      <EmbeddedResource Include="Resources\PreviousBtn.png" />
+      <EmbeddedResource Include="Resources\PreviousBtn_Disabled.png" />
+    </ItemGroup>
+</Project>

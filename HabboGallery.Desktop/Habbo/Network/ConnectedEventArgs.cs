@@ -1,8 +1,9 @@
-﻿using Sulakore.Network;
-using System;
+﻿using System;
 using System.Threading.Tasks;
 
-namespace HabboGallery.Habbo.Network
+using Sulakore.Network;
+
+namespace HabboGallery.Desktop.Habbo.Network
 {
     public class ConnectedEventArgs : EventArgs
     {
