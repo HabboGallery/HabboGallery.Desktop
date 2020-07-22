@@ -25,11 +25,11 @@
   </ItemGroup>
   
   <ItemGroup>
+    <ProjectReference Include="..\Submodules\HabboAlerts\HabboAlerts\HabboAlerts.csproj" />
     <ProjectReference Include="..\Submodules\Sulakore\Sulakore\Sulakore.csproj" />
     <ProjectReference Include="..\Submodules\Eavesdrop\Eavesdrop\Eavesdrop.csproj" />
-    <ProjectReference Include="..\Submodules\HabboAlerts\HabboAlerts\HabboAlerts.csproj" />
     <ProjectReference Include="..\Submodules\Sulakore\Submodules\Flazzy\Flazzy\Flazzy.csproj" />
   </ItemGroup>
 
-  <Import Project="$(ProjectDir)EmbeddedResources.props"/>
+  <Import Project="$(ProjectDir)EmbeddedResources.props" />
 </Project>
