@@ -11,12 +11,13 @@ namespace HabboGallery.Desktop.Web.Json
     {
         public override HHotel Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            return (typeToConvert == typeof(string)) ? HotelEndPoint.GetHotel(reader.GetString()) : HHotel.Unknown;
+            return reader.TokenType == JsonTokenType.String ? 
+                HotelEndPoint.GetHotel(reader.GetString()) : HHotel.Unknown;
         }
 
         public override void Write(Utf8JsonWriter writer, HHotel value, JsonSerializerOptions options)
         {
-            writer.WriteStringValue(HotelEndPoint.GetRegion(value)); //TODO: domain or region?
+            writer.WriteStringValue(HotelEndPoint.GetRegion(value));
         }
     }
 }

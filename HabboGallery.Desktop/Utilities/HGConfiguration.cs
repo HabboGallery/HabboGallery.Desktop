@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Configuration;
+﻿using System.Configuration;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace HabboGallery.Desktop.Utilities
@@ -33,13 +33,18 @@ namespace HabboGallery.Desktop.Utilities
         }
         public IList<string> VisitedHotels
         {
-            get => Get<List<string>>();
+            get => Get<List<string>>() ?? new List<string>();
             set => Set(value);
         }
 
         public HGConfiguration()
         {
             _config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+        }
+
+        public void Save()
+        {
+            _config.Save(ConfigurationSaveMode.Modified);
         }
 
         private T Get<T>([CallerMemberName]string key = "")
@@ -61,7 +66,11 @@ namespace HabboGallery.Desktop.Utilities
         }
         private void Set(object value, [CallerMemberName] string key = "")
         {
-            Settings[key].Value = value.ToString();
+            if (value is IEnumerable<string> values)
+            {
+                Settings[key].Value = string.Join(',', values);
+            }
+            else Settings[key].Value = value.ToString();
         }
     }
 }

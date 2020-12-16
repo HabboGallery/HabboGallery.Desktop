@@ -32,12 +32,12 @@
             this.LoginErrorLbl = new System.Windows.Forms.Label();
             this.LoginSubmitBtn = new System.Windows.Forms.Button();
             this.LoginTitleLbl = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
+            this.PasswordLbl = new System.Windows.Forms.Label();
             this.LoginPasswordTxt = new System.Windows.Forms.TextBox();
             this.LoginEmailTxt = new System.Windows.Forms.TextBox();
             this.LoginPnl = new System.Windows.Forms.Panel();
             this.ExportCertificateBtn = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
+            this.EmailLbl = new System.Windows.Forms.Label();
             this.StatusLbl = new System.Windows.Forms.Label();
             this.CloseBtn = new System.Windows.Forms.Panel();
             this.HotelExtensionDownBtn = new System.Windows.Forms.Panel();
@@ -62,10 +62,9 @@
             this.RememberMeBx.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.RememberMeBx.ForeColor = System.Drawing.SystemColors.ControlText;
             this.RememberMeBx.ImageAlign = System.Drawing.ContentAlignment.TopCenter;
-            this.RememberMeBx.Location = new System.Drawing.Point(154, 111);
-            this.RememberMeBx.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.RememberMeBx.Location = new System.Drawing.Point(132, 96);
             this.RememberMeBx.Name = "RememberMeBx";
-            this.RememberMeBx.Size = new System.Drawing.Size(28, 19);
+            this.RememberMeBx.Size = new System.Drawing.Size(27, 17);
             this.RememberMeBx.TabIndex = 45;
             this.RememberMeBx.Text = "º";
             this.RememberMeBx.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
@@ -74,26 +73,24 @@
             // 
             // LoginErrorLbl
             // 
-            this.LoginErrorLbl.BackColor = System.Drawing.Color.FromArgb(51, 51, 51);
+            this.LoginErrorLbl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(51)))), ((int)(((byte)(51)))));
             this.LoginErrorLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.LoginErrorLbl.ForeColor = System.Drawing.Color.Red;
-            this.LoginErrorLbl.Location = new System.Drawing.Point(71, 102);
-            this.LoginErrorLbl.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.LoginErrorLbl.Location = new System.Drawing.Point(61, 88);
             this.LoginErrorLbl.Name = "LoginErrorLbl";
-            this.LoginErrorLbl.Size = new System.Drawing.Size(70, 30);
+            this.LoginErrorLbl.Size = new System.Drawing.Size(60, 26);
             this.LoginErrorLbl.TabIndex = 44;
             this.LoginErrorLbl.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.LoginErrorLbl.UseCompatibleTextRendering = true;
             // 
             // LoginSubmitBtn
             // 
-            this.LoginSubmitBtn.BackColor = System.Drawing.Color.FromArgb(136, 136, 136);
+            this.LoginSubmitBtn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(136)))), ((int)(((byte)(136)))), ((int)(((byte)(136)))));
             this.LoginSubmitBtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.LoginSubmitBtn.ForeColor = System.Drawing.Color.Black;
-            this.LoginSubmitBtn.Location = new System.Drawing.Point(5, 105);
-            this.LoginSubmitBtn.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.LoginSubmitBtn.Location = new System.Drawing.Point(4, 91);
             this.LoginSubmitBtn.Name = "LoginSubmitBtn";
-            this.LoginSubmitBtn.Size = new System.Drawing.Size(64, 27);
+            this.LoginSubmitBtn.Size = new System.Drawing.Size(55, 23);
             this.LoginSubmitBtn.TabIndex = 43;
             this.LoginSubmitBtn.Text = "Log in";
             this.LoginSubmitBtn.UseVisualStyleBackColor = false;
@@ -101,111 +98,100 @@
             // 
             // LoginTitleLbl
             // 
-            this.LoginTitleLbl.BackColor = System.Drawing.Color.FromArgb(51, 51, 51);
-            this.LoginTitleLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point);
-            this.LoginTitleLbl.ForeColor = System.Drawing.Color.FromArgb(136, 136, 136);
-            this.LoginTitleLbl.Location = new System.Drawing.Point(110, 3);
-            this.LoginTitleLbl.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.LoginTitleLbl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(51)))), ((int)(((byte)(51)))));
+            this.LoginTitleLbl.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(136)))), ((int)(((byte)(136)))), ((int)(((byte)(136)))));
+            this.LoginTitleLbl.Location = new System.Drawing.Point(94, 3);
             this.LoginTitleLbl.Name = "LoginTitleLbl";
-            this.LoginTitleLbl.Size = new System.Drawing.Size(105, 18);
+            this.LoginTitleLbl.Size = new System.Drawing.Size(90, 16);
             this.LoginTitleLbl.TabIndex = 42;
-            this.LoginTitleLbl.Text = "Create account";
+            this.LoginTitleLbl.Text = "Register";
             this.LoginTitleLbl.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.LoginTitleLbl.UseCompatibleTextRendering = true;
             this.LoginTitleLbl.Click += new System.EventHandler(this.LoginTitleLbl_Click);
             // 
-            // label2
+            // EmailLbl
             // 
-            this.label2.BackColor = System.Drawing.Color.FromArgb(51, 51, 51);
-            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.label2.ForeColor = System.Drawing.Color.FromArgb(136, 136, 136);
-            this.label2.Location = new System.Drawing.Point(5, 52);
-            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(119, 18);
-            this.label2.TabIndex = 41;
-            this.label2.Text = "Password";
-            this.label2.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
-            this.label2.UseCompatibleTextRendering = true;
+            this.EmailLbl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(51)))), ((int)(((byte)(51)))));
+            this.EmailLbl.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(136)))), ((int)(((byte)(136)))), ((int)(((byte)(136)))));
+            this.EmailLbl.Location = new System.Drawing.Point(4, 4);
+            this.EmailLbl.Name = "EmailLbl";
+            this.EmailLbl.Size = new System.Drawing.Size(66, 16);
+            this.EmailLbl.TabIndex = 39;
+            this.EmailLbl.Text = "Email";
+            this.EmailLbl.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
+            this.EmailLbl.UseCompatibleTextRendering = true;
             // 
-            // LoginPasswordTxt
+            // PasswordLbl
             // 
-            this.LoginPasswordTxt.BackColor = System.Drawing.SystemColors.WindowFrame;
-            this.LoginPasswordTxt.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.LoginPasswordTxt.ForeColor = System.Drawing.Color.White;
-            this.LoginPasswordTxt.Location = new System.Drawing.Point(5, 74);
-            this.LoginPasswordTxt.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.LoginPasswordTxt.Name = "LoginPasswordTxt";
-            this.LoginPasswordTxt.PasswordChar = '•';
-            this.LoginPasswordTxt.Size = new System.Drawing.Size(179, 23);
-            this.LoginPasswordTxt.TabIndex = 40;
+            this.PasswordLbl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(51)))), ((int)(((byte)(51)))));
+            this.PasswordLbl.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(136)))), ((int)(((byte)(136)))), ((int)(((byte)(136)))));
+            this.PasswordLbl.Location = new System.Drawing.Point(4, 45);
+            this.PasswordLbl.Name = "PasswordLbl";
+            this.PasswordLbl.Size = new System.Drawing.Size(102, 16);
+            this.PasswordLbl.TabIndex = 41;
+            this.PasswordLbl.Text = "Password";
+            this.PasswordLbl.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
+            this.PasswordLbl.UseCompatibleTextRendering = true;
             // 
             // LoginEmailTxt
             // 
             this.LoginEmailTxt.BackColor = System.Drawing.SystemColors.WindowFrame;
             this.LoginEmailTxt.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.LoginEmailTxt.ForeColor = System.Drawing.Color.White;
-            this.LoginEmailTxt.Location = new System.Drawing.Point(5, 27);
-            this.LoginEmailTxt.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.LoginEmailTxt.Location = new System.Drawing.Point(4, 23);
             this.LoginEmailTxt.Name = "LoginEmailTxt";
-            this.LoginEmailTxt.Size = new System.Drawing.Size(179, 23);
+            this.LoginEmailTxt.Size = new System.Drawing.Size(154, 20);
             this.LoginEmailTxt.TabIndex = 0;
+            // 
+            // LoginPasswordTxt
+            // 
+            this.LoginPasswordTxt.BackColor = System.Drawing.SystemColors.WindowFrame;
+            this.LoginPasswordTxt.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.LoginPasswordTxt.ForeColor = System.Drawing.Color.White;
+            this.LoginPasswordTxt.Location = new System.Drawing.Point(4, 64);
+            this.LoginPasswordTxt.Name = "LoginPasswordTxt";
+            this.LoginPasswordTxt.PasswordChar = '*';
+            this.LoginPasswordTxt.Size = new System.Drawing.Size(154, 20);
+            this.LoginPasswordTxt.TabIndex = 40;
             // 
             // LoginPnl
             // 
-            this.LoginPnl.BackColor = System.Drawing.Color.FromArgb(51, 51, 51);
+            this.LoginPnl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(51)))), ((int)(((byte)(51)))));
             this.LoginPnl.Controls.Add(this.ExportCertificateBtn);
             this.LoginPnl.Controls.Add(this.RememberMeBx);
             this.LoginPnl.Controls.Add(this.LoginErrorLbl);
             this.LoginPnl.Controls.Add(this.LoginSubmitBtn);
-            this.LoginPnl.Controls.Add(this.label2);
+            this.LoginPnl.Controls.Add(this.PasswordLbl);
             this.LoginPnl.Controls.Add(this.LoginPasswordTxt);
-            this.LoginPnl.Controls.Add(this.label1);
+            this.LoginPnl.Controls.Add(this.EmailLbl);
             this.LoginPnl.Controls.Add(this.LoginEmailTxt);
             this.LoginPnl.Controls.Add(this.LoginTitleLbl);
-            this.LoginPnl.Location = new System.Drawing.Point(34, 27);
-            this.LoginPnl.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.LoginPnl.Location = new System.Drawing.Point(29, 23);
             this.LoginPnl.Name = "LoginPnl";
-            this.LoginPnl.Size = new System.Drawing.Size(190, 136);
+            this.LoginPnl.Size = new System.Drawing.Size(163, 118);
             this.LoginPnl.TabIndex = 53;
             // 
             // ExportCertificateBtn
             // 
-            this.ExportCertificateBtn.BackColor = System.Drawing.Color.FromArgb(136, 136, 136);
+            this.ExportCertificateBtn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(136)))), ((int)(((byte)(136)))), ((int)(((byte)(136)))));
             this.ExportCertificateBtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.ExportCertificateBtn.ForeColor = System.Drawing.Color.Black;
-            this.ExportCertificateBtn.Location = new System.Drawing.Point(76, 105);
-            this.ExportCertificateBtn.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.ExportCertificateBtn.Location = new System.Drawing.Point(65, 91);
             this.ExportCertificateBtn.Name = "ExportCertificateBtn";
-            this.ExportCertificateBtn.Size = new System.Drawing.Size(65, 27);
+            this.ExportCertificateBtn.Size = new System.Drawing.Size(56, 23);
             this.ExportCertificateBtn.TabIndex = 46;
             this.ExportCertificateBtn.Text = "Cert";
             this.ExportCertificateBtn.UseVisualStyleBackColor = false;
             this.ExportCertificateBtn.Click += new System.EventHandler(this.ExportCertificateBtn_Click);
             // 
-            // label1
-            // 
-            this.label1.BackColor = System.Drawing.Color.FromArgb(51, 51, 51);
-            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.label1.ForeColor = System.Drawing.Color.FromArgb(136, 136, 136);
-            this.label1.Location = new System.Drawing.Point(5, 5);
-            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(77, 18);
-            this.label1.TabIndex = 39;
-            this.label1.Text = "E-mail address";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
-            this.label1.UseCompatibleTextRendering = true;
-            // 
             // StatusLbl
             // 
             this.StatusLbl.BackColor = System.Drawing.Color.Transparent;
             this.StatusLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.StatusLbl.ForeColor = System.Drawing.Color.FromArgb(221, 221, 221);
-            this.StatusLbl.Location = new System.Drawing.Point(14, 329);
-            this.StatusLbl.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.StatusLbl.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(221)))), ((int)(((byte)(221)))), ((int)(((byte)(221)))));
+            this.StatusLbl.Location = new System.Drawing.Point(12, 285);
             this.StatusLbl.Name = "StatusLbl";
-            this.StatusLbl.Size = new System.Drawing.Size(230, 18);
+            this.StatusLbl.Size = new System.Drawing.Size(197, 16);
             this.StatusLbl.TabIndex = 52;
             this.StatusLbl.Text = "Standby";
             this.StatusLbl.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
@@ -214,55 +200,47 @@
             // CloseBtn
             // 
             this.CloseBtn.BackColor = System.Drawing.Color.Transparent;
-            this.CloseBtn.Location = new System.Drawing.Point(212, 6);
-            this.CloseBtn.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.CloseBtn.Location = new System.Drawing.Point(182, 5);
             this.CloseBtn.Name = "CloseBtn";
-            this.CloseBtn.Size = new System.Drawing.Size(18, 17);
+            this.CloseBtn.Size = new System.Drawing.Size(15, 15);
             this.CloseBtn.TabIndex = 51;
             this.CloseBtn.Click += new System.EventHandler(this.CloseBtn_Click);
             // 
             // HotelExtensionDownBtn
             // 
             this.HotelExtensionDownBtn.BackColor = System.Drawing.Color.Transparent;
-            this.HotelExtensionDownBtn.Location = new System.Drawing.Point(198, 303);
-            this.HotelExtensionDownBtn.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.HotelExtensionDownBtn.Location = new System.Drawing.Point(170, 263);
             this.HotelExtensionDownBtn.Name = "HotelExtensionDownBtn";
-            this.HotelExtensionDownBtn.Size = new System.Drawing.Size(28, 18);
+            this.HotelExtensionDownBtn.Size = new System.Drawing.Size(24, 16);
             this.HotelExtensionDownBtn.TabIndex = 50;
             this.HotelExtensionDownBtn.Click += new System.EventHandler(this.HotelExtensionDownBtn_Click);
             // 
             // HotelExtensionUpBtn
             // 
             this.HotelExtensionUpBtn.BackColor = System.Drawing.Color.Transparent;
-            this.HotelExtensionUpBtn.Location = new System.Drawing.Point(198, 268);
-            this.HotelExtensionUpBtn.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.HotelExtensionUpBtn.Location = new System.Drawing.Point(170, 232);
             this.HotelExtensionUpBtn.Name = "HotelExtensionUpBtn";
-            this.HotelExtensionUpBtn.Size = new System.Drawing.Size(28, 18);
+            this.HotelExtensionUpBtn.Size = new System.Drawing.Size(24, 16);
             this.HotelExtensionUpBtn.TabIndex = 49;
             this.HotelExtensionUpBtn.Click += new System.EventHandler(this.HotelExtensionUpBtn_Click);
             // 
             // ZoomLbl
             // 
             this.ZoomLbl.BackColor = System.Drawing.Color.Transparent;
-            this.ZoomLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-
-            this.ZoomLbl.ForeColor = System.Drawing.Color.FromArgb(221, 221, 221);
-            this.ZoomLbl.Location = new System.Drawing.Point(203, 290);
-            this.ZoomLbl.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.ZoomLbl.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(221)))), ((int)(((byte)(221)))), ((int)(((byte)(221)))));
+            this.ZoomLbl.Location = new System.Drawing.Point(174, 251);
             this.ZoomLbl.Name = "ZoomLbl";
-            this.ZoomLbl.Size = new System.Drawing.Size(41, 17);
+            this.ZoomLbl.Size = new System.Drawing.Size(35, 15);
             this.ZoomLbl.TabIndex = 48;
             this.ZoomLbl.Text = "2X";
             // 
             // IndexDisplayLbl
             // 
-            this.IndexDisplayLbl.BackColor = System.Drawing.Color.FromArgb(68, 68, 68);
-            this.IndexDisplayLbl.ForeColor = System.Drawing.Color.FromArgb(136, 136, 136);
-            this.IndexDisplayLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.IndexDisplayLbl.Location = new System.Drawing.Point(93, 5);
-            this.IndexDisplayLbl.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.IndexDisplayLbl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(68)))), ((int)(((byte)(68)))), ((int)(((byte)(68)))));
+            this.IndexDisplayLbl.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(136)))), ((int)(((byte)(136)))), ((int)(((byte)(136)))));
+            this.IndexDisplayLbl.Location = new System.Drawing.Point(80, 4);
             this.IndexDisplayLbl.Name = "IndexDisplayLbl";
-            this.IndexDisplayLbl.Size = new System.Drawing.Size(64, 18);
+            this.IndexDisplayLbl.Size = new System.Drawing.Size(55, 16);
             this.IndexDisplayLbl.TabIndex = 41;
             this.IndexDisplayLbl.Text = "0/0";
             this.IndexDisplayLbl.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
@@ -271,42 +249,38 @@
             // DragPnl
             // 
             this.DragPnl.BackColor = System.Drawing.Color.Transparent;
-            this.DragPnl.Location = new System.Drawing.Point(19, 2);
-            this.DragPnl.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.DragPnl.Location = new System.Drawing.Point(16, 2);
             this.DragPnl.Name = "DragPnl";
-            this.DragPnl.Size = new System.Drawing.Size(190, 23);
+            this.DragPnl.Size = new System.Drawing.Size(163, 20);
             this.DragPnl.TabIndex = 47;
             // 
-            // BuyPhotoBtn
+            // BuyBtn
             // 
             this.BuyBtn.BackColor = System.Drawing.Color.Transparent;
             this.BuyBtn.Enabled = false;
-            this.BuyBtn.Location = new System.Drawing.Point(145, 235);
-            this.BuyBtn.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.BuyBtn.Name = "BuyPhotoBtn";
-            this.BuyBtn.Size = new System.Drawing.Size(77, 25);
+            this.BuyBtn.Location = new System.Drawing.Point(124, 204);
+            this.BuyBtn.Name = "BuyBtn";
+            this.BuyBtn.Size = new System.Drawing.Size(66, 22);
             this.BuyBtn.TabIndex = 46;
             this.BuyBtn.Click += new System.EventHandler(this.BuyPhotoBtn_Click);
             // 
-            // NextPhotoBtn
+            // NextBtn
             // 
             this.NextBtn.BackColor = System.Drawing.Color.Transparent;
             this.NextBtn.Enabled = false;
-            this.NextBtn.Location = new System.Drawing.Point(175, 202);
-            this.NextBtn.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.NextBtn.Name = "NextPhotoBtn";
-            this.NextBtn.Size = new System.Drawing.Size(50, 33);
+            this.NextBtn.Location = new System.Drawing.Point(150, 175);
+            this.NextBtn.Name = "NextBtn";
+            this.NextBtn.Size = new System.Drawing.Size(43, 29);
             this.NextBtn.TabIndex = 45;
             this.NextBtn.Click += new System.EventHandler(this.NextPhotoBtn_Click);
             // 
-            // PreviousPhotoBtn
+            // PreviousBtn
             // 
             this.PreviousBtn.BackColor = System.Drawing.Color.Transparent;
             this.PreviousBtn.Enabled = false;
-            this.PreviousBtn.Location = new System.Drawing.Point(128, 202);
-            this.PreviousBtn.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.PreviousBtn.Name = "PreviousPhotoBtn";
-            this.PreviousBtn.Size = new System.Drawing.Size(47, 33);
+            this.PreviousBtn.Location = new System.Drawing.Point(110, 175);
+            this.PreviousBtn.Name = "PreviousBtn";
+            this.PreviousBtn.Size = new System.Drawing.Size(40, 29);
             this.PreviousBtn.TabIndex = 44;
             this.PreviousBtn.Click += new System.EventHandler(this.PreviousPhotoBtn_Click);
             // 
@@ -314,21 +288,19 @@
             // 
             this.SearchBtn.BackColor = System.Drawing.Color.Transparent;
             this.SearchBtn.Enabled = false;
-            this.SearchBtn.Location = new System.Drawing.Point(77, 202);
-            this.SearchBtn.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.SearchBtn.Location = new System.Drawing.Point(66, 175);
             this.SearchBtn.Name = "SearchBtn";
-            this.SearchBtn.Size = new System.Drawing.Size(51, 33);
+            this.SearchBtn.Size = new System.Drawing.Size(44, 29);
             this.SearchBtn.TabIndex = 43;
             this.SearchBtn.Click += new System.EventHandler(this.SearchBtn_Click);
             // 
-            // PublishToWebBtn
+            // PublishBtn
             // 
             this.PublishBtn.BackColor = System.Drawing.Color.Transparent;
             this.PublishBtn.Enabled = false;
-            this.PublishBtn.Location = new System.Drawing.Point(30, 202);
-            this.PublishBtn.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.PublishBtn.Name = "PublishToWebBtn";
-            this.PublishBtn.Size = new System.Drawing.Size(47, 33);
+            this.PublishBtn.Location = new System.Drawing.Point(26, 175);
+            this.PublishBtn.Name = "PublishBtn";
+            this.PublishBtn.Size = new System.Drawing.Size(40, 29);
             this.PublishBtn.TabIndex = 42;
             this.PublishBtn.Click += new System.EventHandler(this.PublishToWebBtn_Click);
             // 
@@ -337,32 +309,29 @@
             this.DescriptionLbl.BackColor = System.Drawing.Color.Transparent;
             this.DescriptionLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.DescriptionLbl.ForeColor = System.Drawing.Color.White;
-            this.DescriptionLbl.Location = new System.Drawing.Point(35, 273);
-            this.DescriptionLbl.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.DescriptionLbl.Location = new System.Drawing.Point(30, 237);
             this.DescriptionLbl.Name = "DescriptionLbl";
-            this.DescriptionLbl.Size = new System.Drawing.Size(156, 45);
+            this.DescriptionLbl.Size = new System.Drawing.Size(134, 39);
             this.DescriptionLbl.TabIndex = 40;
             this.DescriptionLbl.UseCompatibleTextRendering = true;
             // 
             // PhotoPreviewBx
             // 
-            this.PhotoPreviewBx.BackColor = System.Drawing.Color.FromArgb(255, 255, 254);
-            this.PhotoPreviewBx.Location = new System.Drawing.Point(34, 27);
-            this.PhotoPreviewBx.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.PhotoPreviewBx.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(254)))));
+            this.PhotoPreviewBx.Location = new System.Drawing.Point(29, 23);
             this.PhotoPreviewBx.Name = "PhotoPreviewBx";
-            this.PhotoPreviewBx.Size = new System.Drawing.Size(190, 136);
+            this.PhotoPreviewBx.Size = new System.Drawing.Size(163, 118);
             this.PhotoPreviewBx.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.PhotoPreviewBx.TabIndex = 39;
             this.PhotoPreviewBx.TabStop = false;
             // 
             // MainFrm
             // 
-            this.Font = Program.DefaultFont;
-            this.BackgroundImage = Resources.GetImageResource("Background.png");
-
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.BackgroundImage = Utilities.HGResources.GetImageResource("Background.png");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(257, 377);
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(254)))));
+            this.ClientSize = new System.Drawing.Size(220, 327);
             this.Controls.Add(this.LoginPnl);
             this.Controls.Add(this.StatusLbl);
             this.Controls.Add(this.CloseBtn);
@@ -378,13 +347,12 @@
             this.Controls.Add(this.PublishBtn);
             this.Controls.Add(this.DescriptionLbl);
             this.Controls.Add(this.PhotoPreviewBx);
+            this.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
-            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.Name = "MainFrm";
             this.Text = "HabboGallery Desktop";
             this.TopMost = true;
-            this.TransparencyKey = System.Drawing.Color.FromArgb(255, 255, 254);
-            this.BackColor = System.Drawing.Color.FromArgb(255, 255, 254);
+            this.TransparencyKey = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(254)))));
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainFrm_FormClosing);
             this.Load += new System.EventHandler(this.MainFrm_Load);
             this.LoginPnl.ResumeLayout(false);
@@ -396,15 +364,15 @@
 
         #endregion
 
-        public System.Windows.Forms.CheckBox RememberMeBx;
+        public System.Windows.Forms.Label LoginTitleLbl;
         public System.Windows.Forms.Label LoginErrorLbl;
         public System.Windows.Forms.Button LoginSubmitBtn;
-        public System.Windows.Forms.Label LoginTitleLbl;
-        public System.Windows.Forms.Label label2;
-        public System.Windows.Forms.TextBox LoginPasswordTxt;
+        public System.Windows.Forms.Label EmailLbl;
+        public System.Windows.Forms.Label PasswordLbl;
         public System.Windows.Forms.TextBox LoginEmailTxt;
+        public System.Windows.Forms.TextBox LoginPasswordTxt;
+        public System.Windows.Forms.CheckBox RememberMeBx;
         public System.Windows.Forms.Panel LoginPnl;
-        public System.Windows.Forms.Label label1;
         public System.Windows.Forms.Label StatusLbl;
         public System.Windows.Forms.Panel CloseBtn;
         public System.Windows.Forms.Panel HotelExtensionDownBtn;

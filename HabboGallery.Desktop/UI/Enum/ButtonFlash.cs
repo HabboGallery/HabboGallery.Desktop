@@ -2,7 +2,6 @@
 {
     public enum ButtonFlash
     {
-        None,
         InventorySearch,
         PublishToWeb,
         Purchase,

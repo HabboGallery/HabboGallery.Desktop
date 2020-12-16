@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Drawing;
 using System.Windows.Forms;
 
 using HabboGallery.Desktop.Web;
@@ -16,28 +15,20 @@ namespace HabboGallery.Desktop
 {
     public class Program
     {
-        public ApiClient ApiClient { get; }
+        public ApiClient Api { get; }
 
-        public HGResources Resources { get; }
-        public HGConfiguration Configuration { get; }
+        public Incoming In { get; set; }
+        public Outgoing Out { get; set; }
 
-        public DirectoryInfo DataDirectory { get; }
-
-        public Incoming In { get; }
-        public Outgoing Out { get; }
-
-        public HGame Game { get; set; } //TODO: Kill HGame
-        
         public HGameData GameData { get; }
         public HConnection Connection { get; }
 
-        public HGConfiguration Config { get; }
-        public bool IsConnected => Connection.IsConnected;
-
-
+        public HGResources Resources { get; }
+        public HGConfiguration Configuration { get; }
+        
+        public DirectoryInfo DataDirectory { get; }
+        
         public static Program Master { get; private set; }
-
-        public static Font DefaultFont { get; } = new Font("Microsoft Sans Serif", 8f);
 
         /// <summary>
         /// The main entry point for the application.
@@ -54,37 +45,25 @@ namespace HabboGallery.Desktop
 
         public Program()
         {
-            Eavesdropper.Certifier = new CertificateManager("HabboGallery", "HabboGallery Root Certificate");
-
+            if (OperatingSystem.IsWindowsVersionAtLeast(7))
+            {
                 Eavesdropper.Terminate();
-            //Load and cache all embedded resources
+                Eavesdropper.Certifier = new CertificateManager("HabboGallery", "HabboGallery Root Certificate");
+            }
+            else throw new PlatformNotSupportedException("This operating system is not supported! The minimum requirement is Windows 7 and Windows 10 is highy recommended!");
+            
             Resources = new HGResources();
-
             Configuration = new HGConfiguration();
+
+            Api = new ApiClient(new Uri(Constants.BASE_URL));
 
             GameData = new HGameData();
             Connection = new HConnection();
-            //Connection.DataOutgoing += HandleOutgoing;
-            //Connection.DataIncoming += HandleIncoming;
-            //
-            //Connection.Connected += ConnectionOpened;
-            //Connection.Disconnected += ConnectionClosed;
 
-            In = new Incoming();
-            Out = new Outgoing();
-
-            if (Eavesdropper.Certifier.CreateTrustedRootCertificate())
-            {
-                //Eavesdropper.ResponseInterceptedAsync += InterceptClientPageAsync;
-
-                //Eavesdropper.Initiate(Constants.PROXY_PORT);
-                //_ui.SetStatusMessage(Constants.INTERCEPTING_CLIENT_PAGE);
-            }
-
-            DataDirectory = CreateAppDataDirectory();
+            DataDirectory = CreateDataDirectory();
         }
 
-        private DirectoryInfo CreateAppDataDirectory()
+        private static DirectoryInfo CreateDataDirectory()
         {
             string appdataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             return Directory.CreateDirectory(Path.Combine(appdataPath, "HabboGallery"));

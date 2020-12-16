@@ -1,8 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
-using Sulakore.Network.Protocol;
-
 namespace HabboGallery.Desktop.Habbo.Events
 {
     public class EventResponse
@@ -10,24 +8,19 @@ namespace HabboGallery.Desktop.Habbo.Events
         private const string EVENT_PREFIX = "friendbar/user/";
 
         [JsonPropertyName("name")]
-        public string Name { get; private set; }
+        public string Name { get; set; }
 
         [JsonPropertyName("data")]
-        public string Data { get; private set; }
+        public string Data { get; set; }
 
+        public EventResponse()
+        { }
         public EventResponse(string name, string data)
         {
             Name = name;
             Data = data;
         }
 
-        public static EventResponse Parse(HPacket packet)
-        {
-            return JsonSerializer.Deserialize<EventResponse>(packet.ReadUTF8());
-        }
-        public string ToEventString()
-        {
-            return EVENT_PREFIX + JsonSerializer.Serialize(this);
-        }
+        public string ToEventString() => EVENT_PREFIX + JsonSerializer.Serialize(this);
     }
 }

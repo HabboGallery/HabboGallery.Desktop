@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Net;
-using System.Text;
 using System.Drawing;
 using System.Net.Http;
-using System.Text.Json;
+using System.Threading;
 using System.Reflection;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -20,12 +20,12 @@ namespace HabboGallery.Desktop.Web
     //TODO: Re-write for the proper API endpoints
     public class ApiClient : HttpClient
     {
-        private const string CsrfExpression = "<meta\\s+name=\"csrf-token\"\\s+content=\"(?<token>[a-zA-Z0-9]{40})\">";
+        private const string CSRF_PATTERN = "<meta\\s+name=\"csrf-token\"\\s+content=\"(?<token>[a-zA-Z0-9]{40})\">";
 
         private readonly HttpClient _client;
+        private readonly CookieContainer _cookieContainer;
 
         private string _loginKey;
-        private readonly CookieContainer _cookieContainer;
 
         public bool IsAuthenticated { get; set; }
 
@@ -40,51 +40,38 @@ namespace HabboGallery.Desktop.Web
             {
                 BaseAddress = baseAddress
             };
+            _client.DefaultRequestHeaders.Add("Accept", "application/json");
             _client.DefaultRequestHeaders.Add("User-Agent", "HabboGallery.Desktop Agent v" + Assembly.GetExecutingAssembly().GetName().Version);
         }
 
-        public async Task<ApiResponse<OldPhoto>> PublishPhotoDataAsync(OldPhoto photo, string ownerName, int roomId)
+        public async Task<ApiResponse<GalleryRecord>> StorePhotoAsync(PhotoItem photoItem)
         {
-            using var message = new HttpRequestMessage(HttpMethod.Post, "photos/store");
-
-            Dictionary<string, string> parameters = new Dictionary<string, string>
+            Dictionary<string, string> parameters = new()
             {
-                { "item_id", photo.Id.ToString() },
-                { "game_checksum", photo.Checksum.ToString() },
-                { "owner_name", ownerName },
-                { "room_id", roomId == 0 ? null : roomId.ToString() },
-                { "country_code", HotelEndPoint.GetRegion(photo.Hotel) },
-                { "description", photo.Description },
-                { "date", photo.PhotoUnixTime.ToString() },
+                { "item_id", photoItem.Id.ToString() },
+                { "game_checksum", photoItem.Checksum.ToString() },
+                { "owner_name", photoItem.OwnerName },
+                { "room_id", photoItem.RoomId?.ToString() ?? null },
+                { "country_code", HotelEndPoint.GetRegion(photoItem.Hotel) },
+                { "description", photoItem.Description },
+                { "date", new DateTimeOffset(photoItem.Date).ToUnixTimeSeconds().ToString() },
                 { "login_key", _loginKey }
             };
 
-            message.Content = new FormUrlEncodedContent(parameters);
+            using var response = await _client.PostAsync("api/photos/store",
+                new FormUrlEncodedContent(parameters)).ConfigureAwait(false);
 
-            using var response = await _client.SendAsync(message);
-            string jsonBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            
-            ApiResponse<OldPhoto> responseData = JsonSerializer.Deserialize<ApiResponse<OldPhoto>>(jsonBody);
-            //TODO: try catch this whole using and return a custom responseData if server errors and does not return valid json
-            responseData.Success = response.IsSuccessStatusCode;
-
-            return responseData;
+            return await response.Content.ReadFromJsonAsync<ApiResponse<GalleryRecord>>().ConfigureAwait(false);
         }
 
-        public async Task<int[]> BatchCheckExistingIdsAsync(int[] ids, HHotel hotel)
+        public async Task<IEnumerable<int>> BatchCheckExistingIdsAsync(IEnumerable<int> ids, HHotel hotel)
         {
-            BatchRequest request = new BatchRequest(_loginKey, HotelEndPoint.GetRegion(hotel), ids);
-
-            using var message = new HttpRequestMessage(HttpMethod.Post, "photos/checkexisting")
-            {
-                Content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json")
-            };
-            using HttpResponseMessage response = await _client.SendAsync(message).ConfigureAwait(false);
+            var request = new BatchRequest(_loginKey, HotelEndPoint.GetRegion(hotel), ids);
+            using var response = await _client.PostAsJsonAsync("api/photos/checkexisting", request).ConfigureAwait(false);
             
             try
             {
-                string content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return JsonSerializer.Deserialize<int[]>(content);
+                return await response.Content.ReadFromJsonAsync<IEnumerable<int>>().ConfigureAwait(false);
             }
             catch (Exception)
             {
@@ -92,34 +79,27 @@ namespace HabboGallery.Desktop.Web
             }
         }
 
-        public async Task<ApiResponse<OldPhoto>> GetPhotoByIdAsync(int photoId, HHotel hotel)
+        public Task<ApiResponse<GalleryRecord>> GetPhotoByIdAsync(int photoId, HHotel hotel)
         {
-            using var message = new HttpRequestMessage(HttpMethod.Get, $"photos/byid/{HotelEndPoint.GetRegion(hotel)}/{photoId}");
-            using var response = await _client.SendAsync(message).ConfigureAwait(false);
-
-            string jsonBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-
-            ApiResponse<OldPhoto> responseData = JsonSerializer.Deserialize<ApiResponse<OldPhoto>>(jsonBody);
-            responseData.Success = response.IsSuccessStatusCode;
-
-            return responseData;
+            return _client.GetFromJsonAsync<ApiResponse<GalleryRecord>>(
+                $"api/photos/byid/{HotelEndPoint.GetRegion(hotel)}/{photoId}");
         }
 
         public async Task<bool> LoginAsync(string email, string password)
         {
-            using var message = new HttpRequestMessage(HttpMethod.Post, "login");
+            string token = await FetchTokenAsync().ConfigureAwait(false);
 
-            Dictionary<string, string> parameters = new Dictionary<string, string>
+            Dictionary<string, string> parameters = new()
             {
-                {"email", email },
-                {"password", password },
-                {"_token", await FetchTokenAsync() },
-                {"external", "true" }
+                { "email", email },
+                { "password", password },
+                { "_token", token },
+                { "external", "true" }
             };
-            message.Content = new FormUrlEncodedContent(parameters);
-
-            using var response = await _client.SendAsync(message).ConfigureAwait(false);
-
+            
+            using var response = await _client.PostAsync("login", 
+                new FormUrlEncodedContent(parameters)).ConfigureAwait(false);
+            
             if (response.IsSuccessStatusCode)
             {
                 try
@@ -135,33 +115,26 @@ namespace HabboGallery.Desktop.Web
 
         public async Task<double> GetLatestVersionAsync()
         {
-            using var message = new HttpRequestMessage(HttpMethod.Get, "desktop/version");
-            using var response = await _client.SendAsync(message).ConfigureAwait(false);
+            string content = await _client.GetStringAsync("api/desktop/version").ConfigureAwait(false);
 
-            string content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             double version = Constants.APP_VERSION;
-
             double.TryParse(content, out version);
+
             return version;
         }
 
         public async Task<string> FetchTokenAsync()
         {
-            using var message = new HttpRequestMessage(HttpMethod.Get, "login");
-            using var response = await _client.SendAsync(message).ConfigureAwait(false);
+            string content = await _client.GetStringAsync("login").ConfigureAwait(false);
+            Match tokenMatch = Regex.Match(content, CSRF_PATTERN);
 
-            string content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            Match tokenMatch = Regex.Match(content, CsrfExpression);
-
-            return tokenMatch.Success ? tokenMatch.Groups["token"].Value : throw new Exception("No CSRF token found");
+            return tokenMatch.Success ? 
+                tokenMatch.Groups["token"].Value : throw new Exception("No CSRF token found");
         }
 
-        public async Task<Image> GetImageAsync(Uri url)
+        public async Task<Image> GetImageAsync(string url, CancellationToken cancellationToken = default)
         {
-            using var message = new HttpRequestMessage(HttpMethod.Get, url.AbsolutePath);
-            using var response = await _client.SendAsync(message).ConfigureAwait(false);
-
-            return Image.FromStream(await response.Content.ReadAsStreamAsync().ConfigureAwait(false));
+            return Image.FromStream(await _client.GetStreamAsync(url, cancellationToken).ConfigureAwait(false));
         }
     }
 }

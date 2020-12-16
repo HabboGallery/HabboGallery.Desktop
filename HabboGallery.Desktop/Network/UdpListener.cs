@@ -4,18 +4,20 @@ using System.Text;
 using System.Threading;
 using System.Text.Json;
 using System.Net.Sockets;
+using System.Buffers.Text;
 using System.Threading.Tasks;
 
 using HabboGallery.Desktop.Habbo;
 
 namespace HabboGallery.Desktop.Network
 {
-    public class UdpListener : IDisposable
+    public sealed class UdpListener : IDisposable
     {
-        private readonly UdpClient _client;
+        private const string SCHEME_PREFIX = "habbogallery://";
+
+        public event EventHandler<GalleryRecord> BuyRequestReceived;
         
-        public event EventHandler<OldPhoto> BuyRequestReceived;
-        //public event EventHandler<ExternalRoomRequest> RoomRequestReceived; //TODO: Implement this one day
+        private readonly UdpClient _client;
         
         public UdpListener(int port)
         {
@@ -24,36 +26,42 @@ namespace HabboGallery.Desktop.Network
 
         public async Task ListenAsync(CancellationToken cancellationToken = default)
         {
-            while (cancellationToken.IsCancellationRequested)
+            static bool TryParseBuy(Span<byte> buffer, out GalleryRecord record)
+            {
+                record = default;
+
+                // "habbogallery://[OP]/[RECORD_JSON_BASE64]"
+                ReadOnlySpan<char> data = Encoding.UTF8.GetString(buffer);
+
+                if (!data.StartsWith(SCHEME_PREFIX))
+                    return false;
+
+                data = data.Slice(SCHEME_PREFIX.Length);
+
+                int delimiterIndex = data.IndexOf('/');
+                if (delimiterIndex == -1)
+                    return false;
+
+                string d = data.Slice(0, delimiterIndex).ToString();
+
+                if (!data.Slice(0, delimiterIndex).SequenceEqual("buy"))
+                    return false;
+
+                Span<byte> decoded = new byte[Base64.GetMaxDecodedFromUtf8Length(data.Length - delimiterIndex - 1)];
+                var op = Base64.DecodeFromUtf8(buffer.Slice(SCHEME_PREFIX.Length + delimiterIndex + 1), decoded, out _, out int written);
+
+                record = JsonSerializer.Deserialize<GalleryRecord>(decoded.Slice(0, written));
+                return true;
+            }
+
+            while (!cancellationToken.IsCancellationRequested)
             {
                 UdpReceiveResult datagram = await _client.ReceiveAsync().ConfigureAwait(false);
 
-                string rawDataString = Encoding.UTF8.GetString(datagram.Buffer);
-                string[] dataArray = rawDataString.Split('/');
+                if (!TryParseBuy(datagram.Buffer, out var record))
+                    continue; //TODO: some notification for invalid data.
 
-                if (dataArray.Length != 2)
-                    continue;
-
-                string decoded = Encoding.UTF8.GetString(Convert.FromBase64String(dataArray[1]));
-
-                switch (dataArray[0])
-                {
-                    case "buy":
-                    {
-                        try
-                        {
-                            OldPhoto photo = JsonSerializer.Deserialize<OldPhoto>(decoded);
-                            BuyRequestReceived(null, photo);
-                        }
-                        catch (Exception) { } //TODO:
-                        break;
-                    }
-                    case "room":
-                    {
-                        //TODO: implement this in both Web and Desktop
-                        throw new NotImplementedException();
-                    }
-                }
+                BuyRequestReceived(this, record);
             }
         }
 

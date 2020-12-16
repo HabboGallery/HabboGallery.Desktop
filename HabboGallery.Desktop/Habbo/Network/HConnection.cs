@@ -1,10 +1,11 @@
-﻿using Sulakore.Network;
-using Sulakore.Network.Protocol;
-using System;
+﻿using System;
 using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
+using Sulakore.Network;
+using Sulakore.Network.Protocol;
 
 namespace HabboGallery.Desktop.Habbo.Network
 {
@@ -87,7 +88,7 @@ namespace HabboGallery.Desktop.Habbo.Network
             {
                 try
                 {
-                    Local = await HNode.AcceptAsync(ListenPort).ConfigureAwait(false);
+                    Local = await HNode.AcceptNodeAsync(ListenPort).ConfigureAwait(false);
                     if (!_isIntercepting)
                         break;
 

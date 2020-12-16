@@ -13,20 +13,13 @@ namespace HabboGallery.Desktop.UI
 {
     public class UIUpdater
     {
-        public HGResources Resources => Program.Master.Resources;
+        public static HGResources Resources => Program.Master.Resources;
 
         private readonly HashSet<Control> _controlsToMove;
         private readonly PrivateFontCollection _fontCollection;
 
         private readonly string[] _zoomTypes = new string[2] { "2X", "1X" };
 
-        [DllImport("user32.dll")]
-        public static extern bool ReleaseCapture();
-        [DllImport("user32.dll")]
-        public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
-        [DllImport("gdi32.dll")]
-        private static extern IntPtr AddFontMemResourceEx(IntPtr pbFont, uint cbFont, IntPtr pdv, [In] ref uint pcFonts);
-        
         private int _zoomIndex;
 
         public MainFrm Target { get; }
@@ -36,47 +29,51 @@ namespace HabboGallery.Desktop.UI
             Target = target;
 
             // Initialize draggable controls
-            Application.AddMessageFilter(Target);
-            _controlsToMove = new HashSet<Control> { Target, Target.DragPnl };
+            _controlsToMove = new HashSet<Control> {
+                Target,
+                Target.DragPnl
+            };
             
             // Initialize Volter font
             _fontCollection = new PrivateFontCollection();
-            InitFonts();
+            InitVolterFont();
         }
 
-        private void InitFonts()
+        private void InitVolterFont()
         {
             byte[] fontdata = Resources.GetResourceBytes("Volter.ttf");
 
-            IntPtr data = Marshal.AllocCoTaskMem(fontdata.Length);
-            Marshal.Copy(fontdata, 0, data, fontdata.Length);
+            IntPtr fontDataPtr = Marshal.AllocCoTaskMem(fontdata.Length);
+            Marshal.Copy(fontdata, 0, fontDataPtr, fontdata.Length);
 
             uint cFonts = 0;
-            AddFontMemResourceEx(data, (uint)fontdata.Length, IntPtr.Zero, ref cFonts);
-            _fontCollection.AddMemoryFont(data, fontdata.Length);
+            NativeMethods.AddFontMemResourceEx(fontDataPtr, (uint)fontdata.Length, IntPtr.Zero, ref cFonts);
+            _fontCollection.AddMemoryFont(fontDataPtr, fontdata.Length);
 
-            Marshal.FreeCoTaskMem(data);
-
-            var font = new Font(_fontCollection.Families[0], 7);
+            Marshal.FreeCoTaskMem(fontDataPtr);
 
             Target.DescriptionLbl.Font = 
+                Target.EmailLbl.Font =
+                Target.PasswordLbl.Font =
+                Target.LoginEmailTxt.Font =
+                Target.LoginPasswordTxt.Font =
+                Target.LoginTitleLbl.Font =
                 Target.IndexDisplayLbl.Font = 
                 Target.ZoomLbl.Font = 
                 Target.StatusLbl.Font = 
-                Target.LoginEmailTxt.Font =
-                Target.RememberMeBx.Font = font;
+                Target.RememberMeBx.Font = new Font(_fontCollection.Families[0], 7);
         }
 
         public bool DragControl(ref Message m)
         {
-            const int WmNclbuttondown = 0xA1;
-            const int WmLbuttondown = 0x0201;
-            const int HtCaption = 0x2;
+            const int WM_NCLBUTTONDOWN = 0xA1;
+            const int WM_LBUTTONDOWN = 0x0201;
+            const int HTCAPTION = 0x2;
 
-            if (m.Msg == WmLbuttondown && _controlsToMove.Contains(Control.FromHandle(m.HWnd)))
+            if (m.Msg == WM_LBUTTONDOWN && _controlsToMove.Contains(Control.FromHandle(m.HWnd)))
             {
-                ReleaseCapture();
-                SendMessage(Target.Handle, WmNclbuttondown, HtCaption, 0);
+                NativeMethods.ReleaseCapture();
+                NativeMethods.SendMessage(Target.Handle, WM_NCLBUTTONDOWN, HTCAPTION, 0);
                 return true;
             }
             return false;
@@ -84,36 +81,39 @@ namespace HabboGallery.Desktop.UI
 
         public void OnPhotoQueueUpdate()
         {
-            Target.PreviousBtn.Enabled = Target.CurrentIndex > 0;
-            Resources.RenderButtonState(Target.PreviousBtn, Target.PreviousBtn.Enabled);
-
-            Target.NextBtn.Enabled = Target.CurrentIndex < Target.Photos.Count - 1 && Target.Photos.Count > 1;
-            Resources.RenderButtonState(Target.NextBtn, Target.NextBtn.Enabled);
-
-            Target.BuyBtn.Enabled = true;
-            Resources.RenderButtonState(Target.BuyBtn, true);
-            
-            Target.PublishBtn.Enabled = true;
-            Resources.RenderButtonState(Target.PublishBtn, true);
-            
             Target.Invoke((MethodInvoker)delegate
             {
-                var photo = Target.Photos.Count > 0 ? Target.CurrentPhoto : null;
-                bool hasPhotos = photo != null;
+                bool photoSelected = Target.Photos.Count > 0;
 
                 Target.IndexDisplayLbl.Text = Target.CurrentIndex + 1 + "/" + Target.Photos.Count;
-                Target.DescriptionLbl.Text = hasPhotos ? photo.Description : string.Empty;
 
-                if (hasPhotos)
+                Target.PreviousBtn.Enabled = Target.CurrentIndex > 0;
+                Target.NextBtn.Enabled = Target.CurrentIndex < Target.Photos.Count - 1 && Target.Photos.Count > 1;
+                
+                Target.BuyBtn.Enabled = photoSelected;
+                Target.PublishBtn.Enabled = photoSelected;
+                
+                Resources.RenderButtonState(Target.PreviousBtn, Target.PreviousBtn.Enabled);
+                Resources.RenderButtonState(Target.NextBtn, Target.NextBtn.Enabled);
+
+                Resources.RenderButtonState(Target.BuyBtn, Target.BuyBtn.Enabled);
+                Resources.RenderButtonState(Target.PublishBtn, Target.PublishBtn.Enabled);
+
+                if (photoSelected)
                 {
-                    Target.PhotoPreviewBx.Image = Target.ImageCache[photo.Id];
+                    Target.PhotoPreviewBx.Image = Target.ImageCache[Target.CurrentPhoto.Id];
                     Target.PhotoPreviewBx.BackColor = Color.Black;
+
+                    Target.DescriptionLbl.Text = Target.CurrentPhoto.Description;
                 }
-                Target.BuyType = 0;
+                else Target.DescriptionLbl.Text = string.Empty;
+
+                Target.BuyType = 0; //TODO: ?
             });
         }
 
-        public void UpdateQueueStatus(int queueCount) => SetStatusMessage(queueCount > 0 ? $"Photos in queue: {queueCount}" : "No photos queued!");
+        public void UpdateQueueStatus(int queueCount) 
+            => SetStatusMessage(queueCount > 0 ? $"Photos in queue: {queueCount}" : "No photos queued!");
 
         public void SetStatusMessage(string message)
         {
@@ -123,14 +123,12 @@ namespace HabboGallery.Desktop.UI
             });
         }
 
+        //TODO: Refactor entire carousel logic, too tired to do this at 3am
         public void RotateZoomCarousel(CarouselDirection direction)
         {
             if (direction == CarouselDirection.Up)
-                _zoomIndex = (_zoomIndex - 1) < 0 ? 
-                    _zoomTypes.Length - 1 : _zoomIndex - 1;
-            else
-                _zoomIndex = (_zoomIndex + 1) == _zoomTypes.Length ?
-                    0 : _zoomIndex + 1;
+                _zoomIndex = (_zoomIndex - 1) < 0 ? _zoomTypes.Length - 1 : _zoomIndex - 1;
+            else  _zoomIndex = (_zoomIndex + 1) == _zoomTypes.Length ? 0 : _zoomIndex + 1;
 
             Target.Invoke((MethodInvoker)delegate
             {
@@ -142,7 +140,7 @@ namespace HabboGallery.Desktop.UI
 
         public async Task StartFlashingButtonAsync(ButtonFlash button, CancellationToken cancellationToken = default)
         {
-            if (button == ButtonFlash.None) return;
+            const int PHOTO_FLASH_DELAY = 500;
 
             Control buttonToFlash = button switch
             {
@@ -152,26 +150,26 @@ namespace HabboGallery.Desktop.UI
                 ButtonFlash.NextPhoto => Target.NextBtn,
                 ButtonFlash.PreviousPhoto => Target.PreviousBtn,
 
-                _ => throw new ArgumentException(nameof(button))
+                _ => throw new ArgumentException(null, nameof(button))
             };
 
             bool flashToggle = false;
             while (!cancellationToken.IsCancellationRequested)
             {
                 Resources.RenderButtonState(buttonToFlash, flashToggle = !flashToggle);
-                await Task.Delay(500).ConfigureAwait(false);
+                await Task.Delay(PHOTO_FLASH_DELAY, cancellationToken).ConfigureAwait(false);
             }
             
-            Resources.RenderButtonState(buttonToFlash, button == ButtonFlash.InventorySearch); //TODO: sets others false, is this fine?
+            Resources.RenderButtonState(buttonToFlash, button == ButtonFlash.InventorySearch); //TODO: sets others to disabled state, is this fine?
         }
 
         public void SetLoginMessage(string message, bool enableButton)
         {
-            Target.Invoke(new MethodInvoker(() =>
+            Target.Invoke((MethodInvoker)delegate 
             {
                 Target.LoginErrorLbl.Text = message;
                 Target.LoginSubmitBtn.Enabled = enableButton;
-            }));
+            });
         }
 
         public void HideLogin() => Target.LoginPnl.Visible = false;

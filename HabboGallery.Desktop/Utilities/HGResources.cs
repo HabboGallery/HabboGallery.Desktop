@@ -26,25 +26,26 @@ namespace HabboGallery.Desktop.Utilities
 
         public byte[] GetResourceBytes(string embeddedResourceName)
         {
-            using var ms = _cachedResources[embeddedResourceName];
-            byte[] data = new byte[ms.Length];
-            ms.Read(data);
+            using var stream = _cachedResources[embeddedResourceName];
+            byte[] data = new byte[stream.Length];
+            stream.Read(data);
             return data;
         }
 
-        public Image GetImageResource(string embeddedImageName)
+        public static Image GetImageResource(string embeddedImageName)
             => Image.FromStream(_cachedResources[embeddedImageName]);
 
         public void RenderButtonState(Control buttonControl, bool enabled)
         {
-            buttonControl.Invoke((MethodInvoker)delegate {
-                string buttonResourceName = buttonControl.Name;
+            if (buttonControl.InvokeRequired)
+                buttonControl.Invoke((MethodInvoker)delegate { RenderButtonState(buttonControl, enabled); });
 
-                if (!enabled)
-                    buttonResourceName += "_Disabled";
+            string buttonResourceName = buttonControl.Name;
 
-                buttonControl.BackgroundImage = GetImageResource(buttonResourceName + ".png");
-            });
+            if (!enabled)
+                buttonResourceName += "_Disabled";
+
+            buttonControl.BackgroundImage = GetImageResource(buttonResourceName + ".png");
         }
 
         public static Stream GetResourceStream(string embeddedResourceName)

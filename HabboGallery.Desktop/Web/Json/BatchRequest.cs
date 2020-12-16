@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace HabboGallery.Desktop.Web.Json
 {
@@ -11,9 +12,9 @@ namespace HabboGallery.Desktop.Web.Json
         public string CountryCode { get; set; }
 
         [JsonPropertyName("photo_ids")]
-        public int[] PhotoIds { get; set; }
+        public IEnumerable<int> PhotoIds { get; set; }
 
-        public BatchRequest(string loginKey, string countryCode, int[] photoIds)
+        public BatchRequest(string loginKey, string countryCode, IEnumerable<int> photoIds)
         {
             LoginKey = loginKey;
             CountryCode = countryCode;

@@ -1,35 +1,33 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <UseWindowsForms>true</UseWindowsForms>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-  </PropertyGroup>
-  
-  <PropertyGroup>
-    <Authors>HabboGallery</Authors>
-    <Copyright>Copyright © HabboGallery 2020</Copyright>
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<UseWindowsForms>true</UseWindowsForms>
+		<TargetFramework>net5.0-windows</TargetFramework>
 
-    <Version>0.5</Version>
-    <FileVersion>0.5</FileVersion>
-    <AssemblyVersion>0.5</AssemblyVersion>
-    
-    <ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
-  </PropertyGroup>
-  
-  <ItemGroup>
-    <None Update="Hashes.ini">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  
-  <ItemGroup>
-    <ProjectReference Include="..\Submodules\HabboAlerts\HabboAlerts\HabboAlerts.csproj" />
-    <ProjectReference Include="..\Submodules\Sulakore\Sulakore\Sulakore.csproj" />
-    <ProjectReference Include="..\Submodules\Eavesdrop\Eavesdrop\Eavesdrop.csproj" />
-    <ProjectReference Include="..\Submodules\Sulakore\Submodules\Flazzy\Flazzy\Flazzy.csproj" />
-  </ItemGroup>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+	</PropertyGroup>
 
-  <Import Project="$(ProjectDir)EmbeddedResources.props" />
+	<PropertyGroup>
+		<Authors>HabboGallery</Authors>
+		<Copyright>Copyright © HabboGallery 2020</Copyright>
+
+		<Version>0.5</Version>
+		<FileVersion>0.5</FileVersion>
+		<AssemblyVersion>0.5</AssemblyVersion>
+
+		<ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Include="..\.editorconfig" Link=".editorconfig" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Submodules\HabboAlerts\HabboAlerts\HabboAlerts.csproj" />
+		<ProjectReference Include="..\Submodules\Sulakore\Sulakore\Sulakore.csproj" />
+		<ProjectReference Include="..\Submodules\Eavesdrop\Eavesdrop\Eavesdrop.csproj" />
+		<ProjectReference Include="..\Submodules\Sulakore\Submodules\Flazzy\Flazzy\Flazzy.csproj" />
+	</ItemGroup>
+
+	<Import Project="$(ProjectDir)EmbeddedResources.props" />
 </Project>

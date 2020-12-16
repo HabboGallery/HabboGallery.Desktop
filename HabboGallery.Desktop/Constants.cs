@@ -1,12 +1,25 @@
 ﻿namespace HabboGallery.Desktop
 {
+    //TODO: Localizations
     public static class Constants
     {
-        public const double APP_VERSION = 0.3;
+        public const double APP_VERSION = 0.5;
 
-        public const string BASE_URL = "https://habbo.gallery/";
+        public const string BASE_URL = "https://habbo.gallery";
 
         public const ushort PROXY_PORT = 8282;
+        public const ushort UDP_LISTENER_PORT = 9119;
+
+        public const string BUBBLE_ICON_URL = "/images/desktop/icon.png";
+
+        public const string RESPONSE_NAME_NUT = "newUserTour";
+        public const string RESPONSE_NAME_EXTERNAL_BUY = "confirmExternalBuy";
+        public const string RESPONSE_NAME_CLOSE_FORM = "closeForm";
+
+        public const string SANTORINI_FURNI_NAME = "santorini_c17_bar_64_a_0_0";
+        public const string ADS_BACKGROUND_FURNI_NAME = "ads_mpu_160_64_a_4_0";
+
+        public const string PHOTO_ISSUE_DIALOG_IMAGE_URL = "https://images.habbo.com/c_images/Security/safetytips6_n.png";
 
         public const string INTERCEPTING_CLIENT = "Intercepting Client..";
         public const string INTERCEPTING_CONNECTION = "Intercepting Connection..";
@@ -50,23 +63,10 @@
         public const string UPDATE_FOUND_BODY = "A newer version of HabboGallery Desktop was found, would you like to download it?";
         public const string UPDATE_FOUND_TITLE = "HabboGallery ~ Update Found";
 
-        public const string BUBBLE_ICON_DEFAULT_PATH = "desktop/icon.png";
-
-        public const string MODDED_CLIENTS_FOLDER_NAME = "Modified Clients";
-
-        public const string HASHES_FILE_NAME = "Hashes.ini";
-
-        public const int UDP_LISTENER_PORT = 9119;
-
-        public const string RESPONSE_NAME_NUT = "newUserTour";
-        public const string RESPONSE_NAME_EXTERNAL_BUY = "confirmExternalBuy";
-        public const string RESPONSE_NAME_CLOSE_FORM = "closeForm";
-
-        public const string CONTENT_TYPE_FLASH = "application/x-shockwave-flash";
-        public const string CONTENT_TYPE_TEXT = "text";
-
-        public const string SANTORINI_FURNI_NAME = "santorini_c17_bar_64_a_0_0";
-        public const string ADS_BACKGROUND_FURNI_NAME = "ads_mpu_160_64_a_4_0";
+        public const string INTRO_DIALOG_TITLE = "HabboGallery - Welcome!";
+        public const string INTRO_DIALOG_BODY = "<b><font size=\"15\">Welcome to HabboGallery!</font></b><br/><br/>If you see this message," +
+                                               " that means you've <b><font color=\"#006400\">successfully connected</font></b> HabboGallery to" +
+                                               " Habbo for the very first time!<br><br>";
 
         public const string PHOTO_ISSUE_DIALOG_TITLE = "Uh oh...";
 
@@ -79,10 +79,8 @@
                                                          "that were taken on <b>&nbsp;Habbo USA</b>. If your account originates from another hotel (e.g. UK, " +
                                                          "CA or AU), you will not be able to retrieve your photos, sorry!";
         public const string PHOTO_ISSUE_DIALOG_EVENT_TITLE = "I understand :(";
-        public const string PHOTO_ISSUE_DIALOG_IMAGE_URL = "https://images.habbo.com/c_images/Security/safetytips6_n.png";
 
         public const string STILL_BUSY_DIALOG_INV_BODY = "Photos in this room have not been loaded. Please wait, we're still processing the photos in your inventory!";
-        public const string STILL_BUSY_DIALOG_ROOM_BODY = "Inventory has not been loaded. Please wait, we're still processing some photos that were in found in a room.";
         public const string STILL_BUSY_DIALOG_NEWROOM_BODY = "You entered a new room before all photos in the previous room were loaded. The queue for that room has been cleared!";
 
         public const string OUT_OF = " out of ";
@@ -93,7 +91,6 @@
         public const string EXP_CERT_UNAUTH_TITLE = "HabboGallery ~ Unauthorized";
         public const string EXP_CERT_UNAUTH_BODY = "HabboGallery does not have access to the chosen directory. Please try another one, or run HabboGallery as administrator in order to save to this directory.";
 
-        public const string UPDATE_URL = "download";
         public const string UP_TO_DATE_MESSAGE = "No updates found!";
     }
 }
