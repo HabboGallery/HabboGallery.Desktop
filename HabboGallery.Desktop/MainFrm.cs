@@ -86,8 +86,6 @@ namespace HabboGallery.Desktop
             _datagramListener = new UdpListener(Constants.UDP_LISTENER_PORT);
             _datagramListener.BuyRequestReceived += ExternalBuyRequestReceived;
 
-            _ = _datagramListener.ListenAsync(); 
-
             _pendingPhotoPurchases = new List<GalleryRecord>();
             
             _roomPhotoQueue = new Queue<int>();
@@ -98,12 +96,14 @@ namespace HabboGallery.Desktop
             InitializeComponent();
 
             _ui = new UIUpdater(this);
+
+            _ = CheckForUpdatesAsync();
         }
 
         public bool PreFilterMessage(ref Message msg)
             => _ui.DragControl(ref msg);
 
-        private async Task DebugAsync(string message) 
+        private async Task DebugAsync(string message)
         { 
             await Connection.SendToClientAsync(In.Whisper, 0, message, 0, 0, 0, -1).ConfigureAwait(false); 
             Debug.WriteLine(message);

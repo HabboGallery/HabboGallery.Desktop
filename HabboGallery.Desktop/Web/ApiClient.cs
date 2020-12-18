@@ -117,8 +117,8 @@ namespace HabboGallery.Desktop.Web
         {
             string content = await _client.GetStringAsync("api/desktop/version").ConfigureAwait(false);
 
-            double version = Constants.APP_VERSION;
-            double.TryParse(content, out version);
+            if (!double.TryParse(content, out double version))
+                version = Constants.APP_VERSION;
 
             return version;
         }
