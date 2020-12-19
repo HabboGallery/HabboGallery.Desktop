@@ -4,6 +4,7 @@ using System.Text;
 using System.Linq;
 using System.Drawing;
 using System.Threading;
+using System.Text.Json;
 using System.Diagnostics;
 using System.Windows.Forms;
 using System.Threading.Tasks;
@@ -27,7 +28,6 @@ using Sulakore.Network;
 using Sulakore.Habbo.Messages;
 
 using Eavesdrop;
-using System.Text.Json;
 
 #nullable enable
 namespace HabboGallery.Desktop
@@ -368,7 +368,7 @@ namespace HabboGallery.Desktop
 
         private void CloseBtn_Click(object sender, EventArgs e)
         {
-            Configuration.Save();
+            Master.SaveConfig();
 
             TerminateProxy();
             Close();
@@ -386,7 +386,7 @@ namespace HabboGallery.Desktop
                     {
                         Configuration.Email = LoginEmailTxt.Text;
                         Configuration.Password = LoginPasswordTxt.Text;
-                        Configuration.Save();
+                        Master.SaveConfig();
                     }
 
                     _ui.HideLogin();
@@ -499,7 +499,7 @@ namespace HabboGallery.Desktop
 
                     Connection.SendToClientAsync(countryIssueAlert.ToPacket(In.NotificationDialog));
                 }
-                Configuration.Save();
+                Master.SaveConfig();
             }
             else if (e.Packet.Id == Out.GetExtendedProfileByName)
             {

@@ -1,76 +1,34 @@
-﻿using System.Configuration;
+﻿using System.IO;
+using System.Text.Json;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
 namespace HabboGallery.Desktop.Utilities
 {
     public class HGConfiguration
     {
-        private readonly Configuration _config;
+        public string Email { get; set; }
+        public string Password { get; set; }
+        public bool RememberMe { get; set; }
 
-        public KeyValueConfigurationCollection Settings => _config.AppSettings.Settings;
+        public bool IsFirstConnect { get; set; }
+        public IList<string> VisitedHotels { get; set; }
 
-        public string Email
+        public void Save(string configFile)
         {
-            get => Get<string>();
-            set => Set(value);
-        }
-        public string Password
-        {
-            get => Get<string>();
-            set => Set(value);
-        }
-        public bool RememberMe
-        {
-            get => Get<bool>();
-            set => Set(value);
+            File.WriteAllText(configFile, JsonSerializer.Serialize(this));
         }
 
-        public bool IsFirstConnect
+        /// <summary>
+        /// Creates a new config file to the specified path. If the config file already exists, the existing config will be returned instead.
+        /// </summary>
+        public static HGConfiguration Create(string configFile)
         {
-            get => Get<bool>();
-            set => Set(value);
-        }
-        public IList<string> VisitedHotels
-        {
-            get => Get<List<string>>() ?? new List<string>();
-            set => Set(value);
-        }
+            HGConfiguration config;
+            if (File.Exists(configFile))
+                return JsonSerializer.Deserialize<HGConfiguration>(File.ReadAllBytes(configFile));
 
-        public HGConfiguration()
-        {
-            _config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-        }
-
-        public void Save()
-        {
-            _config.Save(ConfigurationSaveMode.Modified);
-        }
-
-        private T Get<T>([CallerMemberName]string key = "")
-        {
-            if (typeof(T) == typeof(bool))
-                return (T)(object)bool.Parse(Settings[key].Value);
-
-            if (typeof(T) == typeof(int))
-                return (T)(object)int.Parse(Settings[key].Value);
-
-            if (typeof(T) == typeof(string))
-                return (T)(object)Settings[key].Value;
-
-            if (typeof(T).IsAssignableFrom(typeof(IList<string>)))
-                return (T)(object)Settings[key].Value
-                    .Split(',', System.StringSplitOptions.RemoveEmptyEntries);
-
-            return default;
-        }
-        private void Set(object value, [CallerMemberName] string key = "")
-        {
-            if (value is IEnumerable<string> values)
-            {
-                Settings[key].Value = string.Join(',', values);
-            }
-            else Settings[key].Value = value.ToString();
+            File.WriteAllText(configFile, JsonSerializer.Serialize(config = new HGConfiguration()));
+            return config;
         }
     }
 }

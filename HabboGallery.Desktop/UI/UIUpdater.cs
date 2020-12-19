@@ -41,7 +41,7 @@ namespace HabboGallery.Desktop.UI
 
         private void InitVolterFont()
         {
-            byte[] fontdata = Resources.GetResourceBytes("Volter.ttf");
+            byte[] fontdata = HGResources.GetResourceBytes("Volter.ttf");
 
             IntPtr fontDataPtr = Marshal.AllocCoTaskMem(fontdata.Length);
             Marshal.Copy(fontdata, 0, fontDataPtr, fontdata.Length);

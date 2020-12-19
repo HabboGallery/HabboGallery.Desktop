@@ -24,7 +24,7 @@ namespace HabboGallery.Desktop.Utilities
             }
         }
 
-        public byte[] GetResourceBytes(string embeddedResourceName)
+        public static byte[] GetResourceBytes(string embeddedResourceName)
         {
             using var stream = _cachedResources[embeddedResourceName];
             byte[] data = new byte[stream.Length];

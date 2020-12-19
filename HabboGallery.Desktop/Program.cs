@@ -15,6 +15,8 @@ namespace HabboGallery.Desktop
 {
     public class Program
     {
+        private readonly string _configPath;
+        
         public ApiClient Api { get; }
 
         public Incoming In { get; set; }
@@ -52,15 +54,17 @@ namespace HabboGallery.Desktop
             }
             else throw new PlatformNotSupportedException("This operating system is not supported! The minimum requirement is Windows 7 and Windows 10 is highy recommended!");
             
+            DataDirectory = CreateDataDirectory();
+
+            _configPath = Path.Combine(DataDirectory.FullName, "config.json");
+
             Resources = new HGResources();
-            Configuration = new HGConfiguration();
+            Configuration = HGConfiguration.Create(_configPath);
 
             Api = new ApiClient(new Uri(Constants.BASE_URL));
 
             GameData = new HGameData();
             Connection = new HConnection();
-
-            DataDirectory = CreateDataDirectory();
         }
 
         private static DirectoryInfo CreateDataDirectory()
@@ -68,5 +72,7 @@ namespace HabboGallery.Desktop
             string appdataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             return Directory.CreateDirectory(Path.Combine(appdataPath, "HabboGallery"));
         }
+
+        public void SaveConfig() => Configuration.Save(_configPath);
     }
 }
