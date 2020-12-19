@@ -111,7 +111,7 @@ namespace HabboGallery.Desktop
 
         private async Task CheckForUpdatesAsync()
         {
-            double newVersion = await Api.GetLatestVersionAsync();
+            double newVersion = await Api.GetLatestVersionAsync().ConfigureAwait(false);
 
             if (newVersion > Constants.APP_VERSION)
             {
@@ -632,7 +632,6 @@ namespace HabboGallery.Desktop
         private void ExportCertificateBtn_Click(object sender, EventArgs e)
         {
             using var certExportDlg = new FolderBrowserDialog();
-
             if (certExportDlg.ShowDialog(this) == DialogResult.OK)
             {
                 string path = Path.Combine(certExportDlg.SelectedPath, Eavesdropper.Certifier.CertificateAuthorityName + ".cer");

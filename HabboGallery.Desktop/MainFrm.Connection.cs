@@ -158,10 +158,6 @@ namespace HabboGallery.Desktop
         private void ConnectionClosed(object sender, EventArgs e)
         {
             _ui.SetStatusMessage(Constants.DISCONNECTED);
-
-            SearchBtn.Enabled = false;
-            Resources.RenderButtonState(SearchBtn, SearchBtn.Enabled);
-
             Environment.Exit(0);
         }
         private void ConnectionOpened(object sender, ConnectedEventArgs e)
