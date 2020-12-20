@@ -51,7 +51,7 @@ namespace HabboGallery.Desktop
                 game.Disassemble();
 
                 _ui.SetStatusMessage(Constants.GENERATING_MESSAGE_HASHES);
-                game.GenerateMessageHashes("Hashes.ini");
+                game.GenerateMessageHashes(Path.Combine(Master.ProgramDirectory.FullName, "Hashes.ini"));
 
                 //We don't need this stuff in HabboGallery
                 foreach (HMessage message in game.Out.Concat(game.In))
@@ -92,7 +92,7 @@ namespace HabboGallery.Desktop
             game.Disassemble();
 
             _ui.SetStatusMessage(Constants.GENERATING_MESSAGE_HASHES);
-            game.GenerateMessageHashes("Hashes.ini");
+            game.GenerateMessageHashes(Path.Combine(Master.ProgramDirectory.FullName, "Hashes.ini"));
 
             //We don't need this stuff in HabboGallery
             foreach (HMessage message in game.Out.Concat(game.In))

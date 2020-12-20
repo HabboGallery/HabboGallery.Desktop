@@ -120,7 +120,7 @@ namespace HabboGallery.Desktop
                 if (result == DialogResult.Yes)
                 {
                     Eavesdropper.Terminate();
-                    Process.Start(new ProcessStartInfo(Constants.BASE_URL + "/update") { UseShellExecute = true });
+                    Process.Start(new ProcessStartInfo(Constants.BASE_URL + "/download") { UseShellExecute = true });
 
                     Environment.Exit(0);
                 }

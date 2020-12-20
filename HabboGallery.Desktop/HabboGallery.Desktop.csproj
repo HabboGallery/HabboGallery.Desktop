@@ -5,15 +5,16 @@
 		<TargetFramework>net5.0-windows</TargetFramework>
 
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
 	</PropertyGroup>
 
 	<PropertyGroup>
 		<Authors>HabboGallery</Authors>
 		<Copyright>Copyright © HabboGallery 2020</Copyright>
 
-		<Version>0.5</Version>
-		<FileVersion>0.5</FileVersion>
-		<AssemblyVersion>0.5</AssemblyVersion>
+		<Version>0.5.0</Version>
+		<FileVersion>0.5.0.0</FileVersion>
+		<AssemblyVersion>0.5.0</AssemblyVersion>
 
 		<ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
 	</PropertyGroup>

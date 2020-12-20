@@ -29,6 +29,7 @@ namespace HabboGallery.Desktop
         public HGConfiguration Configuration { get; }
         
         public DirectoryInfo DataDirectory { get; }
+        public DirectoryInfo ProgramDirectory { get; }
         
         public static Program Master { get; private set; }
 
@@ -54,6 +55,7 @@ namespace HabboGallery.Desktop
             Eavesdropper.Certifier = new CertificateManager("HabboGallery", "HabboGallery Root Certificate");
             
             DataDirectory = CreateDataDirectory();
+            ProgramDirectory = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
 
             _configPath = Path.Combine(DataDirectory.FullName, "config.json");
 
