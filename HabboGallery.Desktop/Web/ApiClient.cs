@@ -15,6 +15,7 @@ using HabboGallery.Desktop.Web.Json;
 using Sulakore.Habbo;
 using Sulakore.Network;
 
+#nullable enable
 namespace HabboGallery.Desktop.Web
 {
     //TODO: Re-write for the proper API endpoints
@@ -44,7 +45,7 @@ namespace HabboGallery.Desktop.Web
             _client.DefaultRequestHeaders.Add("User-Agent", "HabboGallery.Desktop Agent v" + Assembly.GetExecutingAssembly().GetName().Version);
         }
 
-        public async Task<ApiResponse<GalleryRecord>> StorePhotoAsync(PhotoItem photoItem)
+        public async Task<ApiResponse<GalleryRecord>?> StorePhotoAsync(PhotoItem photoItem)
         {
             Dictionary<string, string> parameters = new()
             {
@@ -64,7 +65,7 @@ namespace HabboGallery.Desktop.Web
             return await response.Content.ReadFromJsonAsync<ApiResponse<GalleryRecord>>().ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<int>> BatchCheckExistingIdsAsync(IEnumerable<int> ids, HHotel hotel)
+        public async Task<IEnumerable<int>?> BatchCheckExistingIdsAsync(IEnumerable<int> ids, HHotel hotel)
         {
             var request = new BatchRequest(_loginKey, HotelEndPoint.GetRegion(hotel), ids);
             using var response = await _client.PostAsJsonAsync("api/photos/checkexisting", request).ConfigureAwait(false);
@@ -79,22 +80,24 @@ namespace HabboGallery.Desktop.Web
             }
         }
 
-        public Task<ApiResponse<GalleryRecord>> GetPhotoByIdAsync(int photoId, HHotel hotel)
+        public async Task<ApiResponse<GalleryRecord>?> GetPhotoByIdAsync(int photoId, HHotel hotel)
         {
-            return _client.GetFromJsonAsync<ApiResponse<GalleryRecord>>(
-                $"api/photos/byid/{HotelEndPoint.GetRegion(hotel)}/{photoId}");
+            using var response = await _client.GetAsync($"api/photos/byid/{HotelEndPoint.GetRegion(hotel)}/{photoId}").ConfigureAwait(false);
+
+            if (response.IsSuccessStatusCode)
+                return await response.Content.ReadFromJsonAsync<ApiResponse<GalleryRecord>>().ConfigureAwait(false);
+            else return default;
         }
 
         public async Task<bool> LoginAsync(string email, string password)
         {
             string token = await FetchTokenAsync().ConfigureAwait(false);
 
-            Dictionary<string, string> parameters = new()
-            {
-                { "email", email },
-                { "password", password },
-                { "_token", token },
-                { "external", "true" }
+            var parameters = new KeyValuePair<string?, string?>[] {
+                new("email", email),
+                new("password", password),
+                new("_token", token),
+                new("external", "true")
             };
             
             using var response = await _client.PostAsync("login", 
@@ -113,13 +116,11 @@ namespace HabboGallery.Desktop.Web
             return IsAuthenticated;
         }
 
-        public async Task<double> GetLatestVersionAsync()
+        public async Task<Version?> GetLatestVersionAsync()
         {
             string content = await _client.GetStringAsync("api/desktop/version").ConfigureAwait(false);
 
-            if (!double.TryParse(content, out double version))
-                version = Constants.APP_VERSION;
-
+            Version.TryParse(content, out Version? version);
             return version;
         }
 
@@ -132,7 +133,7 @@ namespace HabboGallery.Desktop.Web
                 tokenMatch.Groups["token"].Value : throw new Exception("No CSRF token found");
         }
 
-        public async Task<Image> GetImageAsync(string url, CancellationToken cancellationToken = default)
+        public async Task<Image> TryGetImageAsync(string url, CancellationToken cancellationToken = default)
         {
             return Image.FromStream(await _client.GetStreamAsync(url, cancellationToken).ConfigureAwait(false));
         }

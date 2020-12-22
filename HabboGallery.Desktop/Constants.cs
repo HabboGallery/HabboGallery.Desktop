@@ -3,8 +3,6 @@
     //TODO: Localizations
     public static class Constants
     {
-        public const double APP_VERSION = 0.5;
-
         public const string BASE_URL = "https://habbo.gallery";
 
         public const ushort PROXY_PORT = 8282;

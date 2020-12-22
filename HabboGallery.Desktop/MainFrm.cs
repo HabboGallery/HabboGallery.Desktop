@@ -34,6 +34,8 @@ namespace HabboGallery.Desktop
 {
     public partial class MainFrm : Form, IMessageFilter
     {
+        public readonly Version Version = new Version(0, 5);
+
         private const int GET_ITEMDATA_DELAY = 780;
         private const int PUBLISH_QUEUE_POLL_DELAY = 1000;
 
@@ -111,9 +113,9 @@ namespace HabboGallery.Desktop
 
         private async Task CheckForUpdatesAsync()
         {
-            double newVersion = await Api.GetLatestVersionAsync().ConfigureAwait(false);
+            Version? newVersion = await Api.GetLatestVersionAsync().ConfigureAwait(false);
 
-            if (newVersion > Constants.APP_VERSION)
+            if (newVersion > Version)
             {
                 var result = MessageBox.Show(Constants.UPDATE_FOUND_BODY, Constants.UPDATE_FOUND_TITLE, MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation);
 
@@ -183,8 +185,7 @@ namespace HabboGallery.Desktop
                 .Where(i => i.TypeId == 3 && !Photos.ContainsKey(i.Id) &&
                 !_roomPhotoQueue.Contains(i.Id));
 
-            IEnumerable<int> unknownIds = await Api
-                .BatchCheckExistingIdsAsync(items.Select(i => i.Id), Hotel).ConfigureAwait(false);
+            IEnumerable<int> unknownIds = await Api.BatchCheckExistingIdsAsync(items.Select(i => i.Id), Hotel).ConfigureAwait(false);
 
             int itemCount = items.Count();
             int unknownCount = unknownIds.Count();
@@ -217,15 +218,21 @@ namespace HabboGallery.Desktop
                 }
             }
         }
+
+        private static ReadOnlySpan<byte> ExtraDataPrefix => new byte[] { 192, 128, 192, 128 };
         private void OnItemDataUpdate(DataInterceptedEventArgs e)
         {
             e.Continue();
 
             int id = int.Parse(e.Packet.ReadUTF8());
-            string extraData = e.Packet.ReadUTF8();
-
             if (!_roomPhotoItems.ContainsKey(id)) return;
 
+            //TODO: Investigate more, hhbr-r-72288657
+            ReadOnlySpan<byte> extraDataRaw = e.Packet.ReadBytes(e.Packet.ReadUInt16());
+            if (extraDataRaw.StartsWith(ExtraDataPrefix))
+                extraDataRaw = extraDataRaw[4..];
+
+            string extraData = Encoding.UTF8.GetString(extraDataRaw);
             try
             {
                 if (PhotoItem.Validate(extraData) && !Photos.ContainsKey(id))
@@ -265,7 +272,8 @@ namespace HabboGallery.Desktop
                     continue;
                 }
 
-                ApiResponse<GalleryRecord> storeResponse = await Api.StorePhotoAsync(photoItem).ConfigureAwait(false);
+                ApiResponse<GalleryRecord>? storeResponse = await Api.StorePhotoAsync(photoItem).ConfigureAwait(false);
+                if (storeResponse == null) return;
 
                 if (!ImageCache.ContainsKey(photoItem.Id) &&
                     !Photos.ContainsKey(photoItem.Id) && 
@@ -273,7 +281,7 @@ namespace HabboGallery.Desktop
                 {
                     Photos.Add(photoItem.Id, record);
 
-                    Image photoImage = await Api.GetImageAsync(record.Url, cancellationToken).ConfigureAwait(false);
+                    Image photoImage = await Api.TryGetImageAsync(record.Url, cancellationToken).ConfigureAwait(false);
                     ImageCache.Add(photoItem.Id, record.CreateDateImage(photoImage));
 
                     _ui.OnPhotoQueueUpdate();
@@ -282,13 +290,8 @@ namespace HabboGallery.Desktop
         }
         private Task ProcessPhotoQueueAsync()
         {
-            if (_roomPhotoQueue.Count == 1)
-            {
-                _ = DebugAsync("_roomPhotoQueue.Count == 1 => _isProcessingItems = false;");
-                
-                _isProcessingItems = false; //Last GetItemData..
-            }
-            _ = DebugAsync("ProcessPhotoQueueAsync " + _roomPhotoQueue.Peek());
+            if (_roomPhotoQueue.Count <= 1)
+                _isProcessingItems = false;
 
             return Connection.SendToServerAsync(Out.GetItemData, _roomPhotoQueue.Peek());
         }
@@ -296,13 +299,14 @@ namespace HabboGallery.Desktop
         private async Task GetKnownPhotoByIdAsync(int photoId)
         {
             //TODO: check imageCache
-            ApiResponse<GalleryRecord> photoResponse = await Api.GetPhotoByIdAsync(photoId, Hotel); //TODO: Create batch processing api
+            ApiResponse<GalleryRecord>? photoResponse = await Api.GetPhotoByIdAsync(photoId, Hotel); //TODO: Create batch processing api
+            if (photoResponse == null) return;
 
             if (!ImageCache.ContainsKey(photoId) && !Photos.ContainsKey(photoId) && photoResponse.TryGetData(out var record))
             {
                 Photos.Add(photoId, record);
 
-                Image photoImage = await Api.GetImageAsync(record.Url).ConfigureAwait(false);
+                Image photoImage = await Api.TryGetImageAsync(record.Url).ConfigureAwait(false);
                 ImageCache.Add(photoId, record.CreateDateImage(photoImage));
 
                 _ui.OnPhotoQueueUpdate();
