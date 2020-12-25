@@ -262,7 +262,6 @@
             this.BuyBtn.Name = "BuyBtn";
             this.BuyBtn.Size = new System.Drawing.Size(66, 22);
             this.BuyBtn.TabIndex = 46;
-            this.BuyBtn.Click += new System.EventHandler(this.BuyPhotoBtn_Click);
             // 
             // NextBtn
             // 
@@ -302,7 +301,6 @@
             this.PublishBtn.Name = "PublishBtn";
             this.PublishBtn.Size = new System.Drawing.Size(40, 29);
             this.PublishBtn.TabIndex = 42;
-            this.PublishBtn.Click += new System.EventHandler(this.PublishToWebBtn_Click);
             // 
             // DescriptionLbl
             // 

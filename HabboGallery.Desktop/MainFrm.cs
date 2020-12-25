@@ -4,7 +4,6 @@ using System.Text;
 using System.Linq;
 using System.Drawing;
 using System.Threading;
-using System.Text.Json;
 using System.Diagnostics;
 using System.Windows.Forms;
 using System.Threading.Tasks;
@@ -13,17 +12,12 @@ using System.Collections.Generic;
 using HabboGallery.Desktop.UI;
 using HabboGallery.Desktop.Web;
 using HabboGallery.Desktop.Habbo;
-using HabboGallery.Desktop.Network;
+using HabboGallery.Desktop.Controls;
 using HabboGallery.Desktop.Web.Json;
 using HabboGallery.Desktop.Utilities;
-using HabboGallery.Desktop.Habbo.Camera;
-using HabboGallery.Desktop.Habbo.Events;
 using HabboGallery.Desktop.Habbo.Network;
 
-using HabboAlerts;
-
 using Sulakore.Habbo;
-using Sulakore.Crypto;
 using Sulakore.Network;
 using Sulakore.Habbo.Messages;
 
@@ -32,46 +26,39 @@ using Eavesdrop;
 #nullable enable
 namespace HabboGallery.Desktop
 {
-    public partial class MainFrm : Form, IMessageFilter
+    public partial class MainFrm : NotifiableForm, IMessageFilter
     {
-        public readonly Version Version = new Version(0, 5);
+        public readonly Version Version = new Version(1, 0, 0);
 
         private const int GET_ITEMDATA_DELAY = 780;
         private const int PUBLISH_QUEUE_POLL_DELAY = 1000;
 
-        public static Program Master => Program.Master;
+        public ApiClient Api => Master.Api;
         
-        public static ApiClient Api => Master.Api;
-        
-        public static Incoming In => Master.In;
-        public static Outgoing Out => Master.Out;
+        public Incoming In => Master.In;
+        public Outgoing Out => Master.Out;
 
-        public static HGResources Resources => Master.Resources;
-        public static HGConfiguration Configuration => Master.Configuration;
+        public HGResources Resources => Master.Resources;
+        public HGConfiguration Configuration => Master.Configuration;
 
-        public static HConnection Connection => Master.Connection;
+        public HConnection Connection => Master.Connection;
 
         private readonly UIUpdater _ui;
-        private readonly UdpListener _datagramListener;
-
-        private List<GalleryRecord> _pendingPhotoPurchases;
-
+        
         //TODO: Lazy loading the images in carousel
         public Dictionary<int, Image> ImageCache { get; }
         public Dictionary<int, GalleryRecord> Photos { get; }
 
         public int CurrentIndex { get; set; }
-        public GalleryRecord? CurrentPhoto => Photos?.Values.ToArray()[CurrentIndex]; //TODO: No lol :D
+        public GalleryRecord? CurrentPhoto => Photos?.Values.ToArray()[CurrentIndex]; //TODO:
 
         private Queue<int> _roomPhotoQueue;
         private Queue<PhotoItem> _photoPublishingQueue;
         private Dictionary<int, HWallItem> _roomPhotoItems;
         
-        public int BuyType { get; set; }
         public string? SessionUsername { get; set; }
         public int CurrentRoomId { get; private set; }
 
-        private bool _waitingForPreview;
         private bool _isProcessingItems;
 
         public bool HasBeenClosed { get; private set; }
@@ -84,11 +71,6 @@ namespace HabboGallery.Desktop
 
             ImageCache = new Dictionary<int, Image>();
             Photos = new Dictionary<int, GalleryRecord>();
-
-            _datagramListener = new UdpListener(Constants.UDP_LISTENER_PORT);
-            _datagramListener.BuyRequestReceived += ExternalBuyRequestReceived;
-
-            _pendingPhotoPurchases = new List<GalleryRecord>();
             
             _roomPhotoQueue = new Queue<int>();
             _photoPublishingQueue = new Queue<PhotoItem>();
@@ -98,7 +80,6 @@ namespace HabboGallery.Desktop
             InitializeComponent();
 
             _ui = new UIUpdater(this);
-
             _ = CheckForUpdatesAsync();
         }
 
@@ -150,15 +131,12 @@ namespace HabboGallery.Desktop
 
             int itemCount = items.Count();
 
-            HabboAlert alert = AlertBuilder.CreateAlert(HabboAlertType.Bubble,
-                (itemCount == 0 ? Constants.SCANNING_EMPTY : itemCount.ToString())
+            string message = (itemCount == 0 ? Constants.SCANNING_EMPTY : itemCount.ToString())
                 + (itemCount == 1 ? Constants.SCANNING_SINGLE : Constants.SCANNING_MULTI)
-                + Constants.SCANNING_INVENTORY_DONE)
-                .WithImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_URL);
-
-            Connection.SendToClientAsync(alert.ToPacket(In.NotificationDialog));
-
-            //TODO: Show user the queueu in photo processing pipeline
+                + Constants.SCANNING_INVENTORY_DONE;
+            
+            //TODO: message
+            //TODO: Show user the queueu in photo publishing pipeline
 
             _isProcessingItems = true;
 
@@ -179,7 +157,7 @@ namespace HabboGallery.Desktop
                 .Where(i => i.TypeId == 3 && !Photos.ContainsKey(i.Id) &&
                 !_roomPhotoQueue.Contains(i.Id));
 
-            IEnumerable<int> unknownIds = await Api.BatchCheckExistingIdsAsync(items.Select(i => i.Id), Hotel).ConfigureAwait(false);
+            IEnumerable<int>? unknownIds = await Api.BatchCheckExistingIdsAsync(items.Select(i => i.Id), Hotel).ConfigureAwait(false);
 
             int itemCount = items.Count();
             int unknownCount = unknownIds.Count();
@@ -191,10 +169,7 @@ namespace HabboGallery.Desktop
             if (unknownCount > 0)
                 alertMessage += " " + unknownCount + Constants.SCANNING_WALLITEMS_UNDISC;
 
-            HabboAlert alert = AlertBuilder.CreateAlert(HabboAlertType.Bubble, alertMessage)
-                .WithImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_URL);
-
-            await Connection.SendToClientAsync(alert.ToPacket(In.NotificationDialog)).ConfigureAwait(false);
+            //TODO: alertMessage
 
             _isProcessingItems = true;
 
@@ -307,43 +282,6 @@ namespace HabboGallery.Desktop
             }
         }
 
-        public Task SendPhotoAsync(GalleryRecord photo)
-        {
-            byte[] compressed = Flazzy.Compression.ZLIB.Compress(Encoding.UTF8.GetBytes(PhotoConverter.OldToNew(photo.StrFill, _ui.GetZoomValue()).ToString()));
-            return Connection.SendToServerAsync(Out.RenderRoom, compressed.Length, compressed);
-        }
-
-        private void BuyPhotoBtn_Click(object sender, EventArgs e)
-        {
-            _waitingForPreview = true;
-
-            BuyBtn.Enabled = false;
-            Resources.RenderButtonState(BuyBtn, BuyBtn.Enabled);
-
-            PublishBtn.Enabled = false;
-            Resources.RenderButtonState(PublishBtn, PublishBtn.Enabled);
-
-            IndexDisplayLbl.Text = Constants.PURCHASE_LOADING;
-            BuyType = 1;
-
-            _ = SendPhotoAsync(CurrentPhoto);
-        }
-        private void PublishToWebBtn_Click(object sender, EventArgs e)
-        {
-            _waitingForPreview = true;
-
-            BuyBtn.Enabled = false;
-            Resources.RenderButtonState(BuyBtn, BuyBtn.Enabled);
-
-            PublishBtn.Enabled = false;
-            Resources.RenderButtonState(PublishBtn, PublishBtn.Enabled);
-
-            IndexDisplayLbl.Text = Constants.PURCHASE_LOADING;
-            BuyType = 2;
-
-            _ = SendPhotoAsync(CurrentPhoto);
-        }
-
         private void PreviousPhotoBtn_Click(object sender, EventArgs e)
         {
             CurrentIndex--;
@@ -419,41 +357,20 @@ namespace HabboGallery.Desktop
             }
         }
 
+        //TODO: Headers
         public void HandleOutgoing(object? sender, DataInterceptedEventArgs e)
         {
             if (HasBeenClosed)
             {
                 e.Continue();
-                if (e.Packet.Id == Out.GetExtendedProfileByName)
-                {
-                    var eventResponse = JsonSerializer.Deserialize<EventResponse>(e.Packet.ReadUTF8());
 
-                    if (eventResponse?.Name == Constants.RESPONSE_NAME_CLOSE_FORM)
-                        Connection.Disconnect();
-                }
+                //TODO: Allow graceful exit
                 return;
             }
 
             if (e.Packet.Id == 4001)
             {
-                string sharedKeyHex = e.Packet.ReadUTF8();
-                if (sharedKeyHex.Length % 2 != 0)
-                {
-                    sharedKeyHex = "0" + sharedKeyHex;
-                }
-
-                byte[] sharedKey = Enumerable.Range(0, sharedKeyHex.Length / 2)
-                    .Select(x => Convert.ToByte(sharedKeyHex.Substring(x * 2, 2), 16))
-                    .ToArray();
-
-                Connection.Remote.Encrypter = new RC4(sharedKey);
-                Connection.Remote.IsEncrypting = true;
-
-                if (IsIncomingEncrypted)
-                {
-                    Connection.Remote.Decrypter = new RC4(sharedKey);
-                    Connection.Remote.IsDecrypting = true;
-                }
+                //TODO: H2020
 
                 e.IsBlocked = true;
             }
@@ -463,24 +380,15 @@ namespace HabboGallery.Desktop
                 _ = HandlePhotoQueueAsync();
                 _ = ProcessPhotoItemsAsync();
 
-                _ = _datagramListener.ListenAsync(); //TODO:
-
                 if (Configuration.IsFirstConnect)
                 {
                     Configuration.IsFirstConnect = false;
 
-                    HabboAlert alert = AlertBuilder.CreateAlert(HabboAlertType.PopUp, Constants.INTRO_DIALOG_BODY)
-                        .WithTitle(Constants.INTRO_DIALOG_TITLE);
-
-                    Connection.SendToClientAsync(alert.ToPacket(In.NotificationDialog));
+                    //TODO: First connect alert
+                    //Constants.INTRO_DIALOG_TITLE
+                    //Constants.INTRO_DIALOG_BODY
                 }
-                else
-                {
-                    HabboAlert alert = AlertBuilder.CreateAlert(HabboAlertType.Bubble, Constants.APP_CONNECT_SUCCESS)
-                        .WithImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_URL);
-
-                    Connection.SendToClientAsync(alert.ToPacket(In.NotificationDialog));
-                }
+                else //TODO: Indicate successful connection in client somehow? Constants.APP_CONNECT_SUCCESS
 
                 if (Hotel == HHotel.Com || Hotel == HHotel.ComTr)
                 {
@@ -488,42 +396,12 @@ namespace HabboGallery.Desktop
                         return;
                     Configuration.VisitedHotels.Add(Hotel.ToDomain());
 
-                    HabboAlert countryIssueAlert = AlertBuilder.CreateAlert(HabboAlertType.PopUp,
-                        Hotel == HHotel.ComTr ? Constants.PHOTO_ISSUE_DIALOG_BODY_TR : Constants.PHOTO_ISSUE_DIALOG_BODY_US)
-                        .WithTitle(Constants.PHOTO_ISSUE_DIALOG_TITLE)
-                        .WithEventTitle(Constants.PHOTO_ISSUE_DIALOG_EVENT_TITLE)
-                        .WithEventUrl(string.Empty)
-                        .WithImageUrl(Constants.PHOTO_ISSUE_DIALOG_IMAGE_URL);
-
-                    Connection.SendToClientAsync(countryIssueAlert.ToPacket(In.NotificationDialog));
+                    //TODO: unsupported hotel message - Hotel == HHotel.ComTr ? Constants.PHOTO_ISSUE_DIALOG_BODY_TR : Constants.PHOTO_ISSUE_DIALOG_BODY_US
+                    // Constants.PHOTO_ISSUE_DIALOG_TITLE
                 }
                 Master.SaveConfig();
             }
-            else if (e.Packet.Id == Out.GetExtendedProfileByName)
-            {
-                string responseProfileName = e.Packet.ReadUTF8();
-                EventResponse? response = JsonSerializer.Deserialize<EventResponse>(responseProfileName);
-                switch (response?.Name)
-                {
-                    case Constants.RESPONSE_NAME_EXTERNAL_BUY:
-                        {
-                            GalleryRecord? photo = _pendingPhotoPurchases.FirstOrDefault(p => IdentifierFromUrl(p.Url) == response.Data);
-                            if (photo != null)
-                            {
-                                BuyType = 1;
-                                _waitingForPreview = true;
-                                
-                                SendPhotoAsync(photo);
-                            }
-                            break;
-                        }
-                    case Constants.RESPONSE_NAME_CLOSE_FORM:
-                        Connection.Disconnect();
-                        break;
-                }
-            }
             else if (e.Packet.Id == Out.GetIgnoredUsers) SessionUsername = e.Packet.ReadUTF8(); //TODO: Pull session information with the packet actually meant for it
-            else if (e.Packet.Id == Out.UseWallItem) OnUseWallItem(e);
         }
 
         public void HandleIncoming(object? sender, DataInterceptedEventArgs e)
@@ -545,35 +423,9 @@ namespace HabboGallery.Desktop
             if (e.Packet.Id == In.Items) OnItems(e);
             else if (e.Packet.Id == In.FurniList) OnFurniList(e);
             else if (e.Packet.Id == In.ItemDataUpdate) OnItemDataUpdate(e);
-            else if (e.Packet.Id == In.CameraStorageUrl) OnPhotoStorageUrl(e);
             else if (e.Packet.Id == In.RoomReady) OnRoomReady(e);
-            /*
-             * This blocks an informative message about friend finding rooms.
-             * We're abusing the mechanic, so we don't want to see the message! :-)
-             */
-            else if (e.Packet.Id == In.FriendFindingRoom) e.IsBlocked = true;
-        }
-        
-        public void OnUseWallItem(DataInterceptedEventArgs e)
-        {
-            int furniId = e.Packet.ReadInt32();
-            e.Packet.ReadInt32();
-
-            if (ImageCache.ContainsKey(furniId))
-            {
-                CurrentIndex = Photos.Values.ToList().FindIndex(p => p.Id == furniId);
-                _ui.OnPhotoQueueUpdate();
-            }
         }
 
-        private void OnPhotoStorageUrl(DataInterceptedEventArgs e)
-        {
-            if (!_waitingForPreview) return;
-
-            Connection.SendToServerAsync(BuyType == 1 ? Out.PurchasePhoto : Out.PublishPhoto);
-
-            _ui.OnPhotoQueueUpdate();
-        }
         private void OnRoomReady(DataInterceptedEventArgs e)
         {
             e.Packet.ReadUTF8();
@@ -587,40 +439,14 @@ namespace HabboGallery.Desktop
 
             if (_isProcessingItems)
             {
-                HabboAlert alert = AlertBuilder.CreateAlert(HabboAlertType.Bubble, Constants.STILL_BUSY_DIALOG_NEWROOM_BODY)
-                    .WithImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_URL);
-
-                Connection.SendToClientAsync(alert.ToPacket(In.NotificationDialog));
+                //TODO: Constants.STILL_BUSY_DIALOG_NEWROOM_BODY
             }
-        }
-
-        private string IdentifierFromUrl(string url) => url[24..].Split('.')[0];
-
-        private void ExternalBuyRequestReceived(object? sender, GalleryRecord e)
-        {
-            _pendingPhotoPurchases.Add(e);
-
-            string paddedAlertTitle = Constants.EXTERNAL_BUY_DIALOG_EVENT_TITLE
-                .PadLeft(Constants.EXTERNAL_BUY_DIALOG_SPACE_COUNT +3 )
-                .PadRight(Constants.EXTERNAL_BUY_DIALOG_SPACE_COUNT * 2+3);
-
-            string identifier = IdentifierFromUrl(e.Url); //TODO: ew
-
-            HabboAlert alert = AlertBuilder.CreateAlert(HabboAlertType.PopUp, Constants.EXTERNAL_BUY_DIALOG_BODY)
-                .WithEventTitle(paddedAlertTitle)
-                .WithTitle(Constants.EXTERNAL_BUY_DIALOG_TITLE)
-                .WithImageUrl("https:" + e.Url)
-                .WithEventUrl(new EventResponse(Constants.RESPONSE_NAME_EXTERNAL_BUY, identifier).ToEventString());
-
-            Connection.SendToClientAsync(alert.ToPacket(In.NotificationDialog));
         }
 
         private void SearchBtn_Click(object sender, EventArgs e)
         {
-            HabboAlert alert = AlertBuilder.CreateAlert(HabboAlertType.Bubble, Constants.SCANNING_INVENTORY)
-                   .WithImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_URL);
+            //TODO: Constants.SCANNING_INVENTORY
 
-            Connection.SendToClientAsync(alert.ToPacket(In.NotificationDialog));
             Connection.SendToServerAsync(Out.RequestFurniInventoryWhenNotInRoom);
         }
         private void LoginTitleLbl_Click(object sender, EventArgs e)
@@ -654,15 +480,10 @@ namespace HabboGallery.Desktop
                 HasBeenClosed = true;
 
                 Connection.DataIncoming -= HandleIncoming;
-                _datagramListener.BuyRequestReceived -= ExternalBuyRequestReceived;
 
                 Hide();
 
-                HabboAlert alert = AlertBuilder.CreateAlert(HabboAlertType.Bubble, Constants.FORM_CLOSED_DIALOG_BODY)
-                    .WithImageUrl(Constants.BASE_URL + Constants.BUBBLE_ICON_URL)
-                    .WithEventUrl(new EventResponse(Constants.RESPONSE_NAME_CLOSE_FORM, string.Empty).ToEventString());
-
-                Connection.SendToClientAsync(alert.ToPacket(In.NotificationDialog));
+                //TODO: Graceful exit logic.
             }
         }
 

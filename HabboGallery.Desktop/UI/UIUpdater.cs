@@ -19,7 +19,7 @@ namespace HabboGallery.Desktop.UI
         private readonly PrivateFontCollection _fontCollection;
 
         private readonly string[] _zoomTypes = new string[2] { "2X", "1X" };
-
+        
         private int _zoomIndex;
 
         public MainFrm Target { get; }
@@ -90,14 +90,8 @@ namespace HabboGallery.Desktop.UI
                 Target.PreviousBtn.Enabled = Target.CurrentIndex > 0;
                 Target.NextBtn.Enabled = Target.CurrentIndex < Target.Photos.Count - 1 && Target.Photos.Count > 1;
                 
-                Target.BuyBtn.Enabled = photoSelected;
-                Target.PublishBtn.Enabled = photoSelected;
-                
                 Resources.RenderButtonState(Target.PreviousBtn, Target.PreviousBtn.Enabled);
                 Resources.RenderButtonState(Target.NextBtn, Target.NextBtn.Enabled);
-
-                Resources.RenderButtonState(Target.BuyBtn, Target.BuyBtn.Enabled);
-                Resources.RenderButtonState(Target.PublishBtn, Target.PublishBtn.Enabled);
 
                 if (photoSelected)
                 {
@@ -107,8 +101,6 @@ namespace HabboGallery.Desktop.UI
                     Target.DescriptionLbl.Text = Target.CurrentPhoto.Description;
                 }
                 else Target.DescriptionLbl.Text = string.Empty;
-
-                Target.BuyType = 0; //TODO: ?
             });
         }
 

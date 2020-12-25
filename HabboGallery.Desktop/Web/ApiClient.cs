@@ -21,7 +21,7 @@ namespace HabboGallery.Desktop.Web
     //TODO: Re-write for the proper API endpoints
     public class ApiClient : HttpClient
     {
-        private const string CSRF_PATTERN = "<meta\\s+name=\"csrf-token\"\\s+content=\"(?<token>[a-zA-Z0-9]{40})\">";
+        private static readonly Regex CsrfRegex = new("<meta\\s+name=\"csrf-token\"\\s+content=\"(?<token>[a-zA-Z0-9]{40})\">", RegexOptions.Compiled);
 
         private readonly HttpClient _client;
         private readonly CookieContainer _cookieContainer;
@@ -47,16 +47,16 @@ namespace HabboGallery.Desktop.Web
 
         public async Task<ApiResponse<GalleryRecord>?> StorePhotoAsync(PhotoItem photoItem)
         {
-            Dictionary<string, string> parameters = new()
+            var parameters = new KeyValuePair<string?, string?>[]
             {
-                { "item_id", photoItem.Id.ToString() },
-                { "game_checksum", photoItem.Checksum.ToString() },
-                { "owner_name", photoItem.OwnerName },
-                { "room_id", photoItem.RoomId?.ToString() ?? null },
-                { "country_code", HotelEndPoint.GetRegion(photoItem.Hotel) },
-                { "description", photoItem.Description },
-                { "date", new DateTimeOffset(photoItem.Date).ToUnixTimeSeconds().ToString() },
-                { "login_key", _loginKey }
+                new("item_id", photoItem.Id.ToString()),
+                new("game_checksum", photoItem.Checksum.ToString()),
+                new("owner_name", photoItem.OwnerName),
+                new("room_id", photoItem.RoomId?.ToString() ?? null),
+                new("country_code", HotelEndPoint.GetRegion(photoItem.Hotel)),
+                new("description", photoItem.Description),
+                new("date", new DateTimeOffset(photoItem.Date).ToUnixTimeSeconds().ToString()),
+                new("login_key", _loginKey)
             };
 
             using var response = await _client.PostAsync("api/photos/store",
@@ -127,7 +127,7 @@ namespace HabboGallery.Desktop.Web
         public async Task<string> FetchTokenAsync()
         {
             string content = await _client.GetStringAsync("login").ConfigureAwait(false);
-            Match tokenMatch = Regex.Match(content, CSRF_PATTERN);
+            Match tokenMatch = CsrfRegex.Match(content);
 
             return tokenMatch.Success ? 
                 tokenMatch.Groups["token"].Value : throw new Exception("No CSRF token found");

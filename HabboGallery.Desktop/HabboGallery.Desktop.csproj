@@ -12,9 +12,9 @@
 		<Authors>HabboGallery</Authors>
 		<Copyright>Copyright © HabboGallery 2020</Copyright>
 
-		<Version>0.5.0</Version>
-		<FileVersion>0.5.0.0</FileVersion>
-		<AssemblyVersion>0.5.0</AssemblyVersion>
+		<Version>0.6.0</Version>
+		<FileVersion>0.6.0.0</FileVersion>
+		<AssemblyVersion>0.6.0</AssemblyVersion>
 
 		<ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
 	</PropertyGroup>
@@ -24,7 +24,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Submodules\HabboAlerts\HabboAlerts\HabboAlerts.csproj" />
 		<ProjectReference Include="..\Submodules\Sulakore\Sulakore\Sulakore.csproj" />
 		<ProjectReference Include="..\Submodules\Eavesdrop\Eavesdrop\Eavesdrop.csproj" />
 		<ProjectReference Include="..\Submodules\Sulakore\Submodules\Flazzy\Flazzy\Flazzy.csproj" />

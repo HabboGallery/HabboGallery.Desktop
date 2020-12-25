@@ -6,22 +6,13 @@
         public const string BASE_URL = "https://habbo.gallery";
 
         public const ushort PROXY_PORT = 8282;
-        public const ushort UDP_LISTENER_PORT = 9119;
-
-        public const string BUBBLE_ICON_URL = "/images/desktop/icon.png";
-
-        public const string RESPONSE_NAME_NUT = "newUserTour";
-        public const string RESPONSE_NAME_EXTERNAL_BUY = "confirmExternalBuy";
-        public const string RESPONSE_NAME_CLOSE_FORM = "closeForm";
-
-        public const string SANTORINI_FURNI_NAME = "santorini_c17_bar_64_a_0_0";
-        public const string ADS_BACKGROUND_FURNI_NAME = "ads_mpu_160_64_a_4_0";
-
+        
         public const string PHOTO_ISSUE_DIALOG_IMAGE_URL = "https://images.habbo.com/c_images/Security/safetytips6_n.png";
 
         public const string INTERCEPTING_CLIENT = "Intercepting Client..";
         public const string INTERCEPTING_CONNECTION = "Intercepting Connection..";
         public const string INTERCEPTING_CLIENT_PAGE = "Intercepting Client Page..";
+        public const string INTERCEPTING_CLIENT_REQUEST_RESPONSE = "Intercepting Client Request/Response";
 
         public const string MODIFYING_CLIENT = "Modifying Client..";
         public const string INJECTING_CLIENT = "Injecting Client..";
@@ -35,15 +26,6 @@
 
         public const string LOGIN_FAILED = "Login failed!";
         public const string LOGIN_ERROR = "Unknown error!";
-
-        public const string PURCHASE_LOADING = "Loading";
-
-        public const string EXTERNAL_BUY_DIALOG_BODY = "<font size=\"15\">&nbsp;&nbsp;<b>Buy Photo</b></font><br><br>&nbsp;&nbsp;A request to buy this photo " +
-                                                       "has been received.<br>&nbsp;&nbsp;If this was not you, please close this message.<br><br>&nbsp;&nbsp;" +
-                                                       "Buying a photo costs 2 Habbo Credits.";
-        public const string EXTERNAL_BUY_DIALOG_TITLE = "HabboGallery - External Request";
-        public const string EXTERNAL_BUY_DIALOG_EVENT_TITLE = "Buy";
-        public const int EXTERNAL_BUY_DIALOG_SPACE_COUNT = 41;
 
         public const string SCANNING_INVENTORY = "Looking for photos in your inventory..";
         public const string SCANNING_INVENTORY_DONE = "found in your inventory!";
