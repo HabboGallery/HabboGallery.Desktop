@@ -105,12 +105,6 @@ namespace HabboGallery.Desktop
         public bool PreFilterMessage(ref Message msg)
             => _ui.DragControl(ref msg);
 
-        private async Task DebugAsync(string message)
-        { 
-            await Connection.SendToClientAsync(In.Whisper, 0, message, 0, 0, 0, -1).ConfigureAwait(false); 
-            Debug.WriteLine(message);
-        }
-
         private async Task CheckForUpdatesAsync()
         {
             Version? newVersion = await Api.GetLatestVersionAsync().ConfigureAwait(false);
@@ -299,7 +293,7 @@ namespace HabboGallery.Desktop
         private async Task GetKnownPhotoByIdAsync(int photoId)
         {
             //TODO: check imageCache
-            ApiResponse<GalleryRecord>? photoResponse = await Api.GetPhotoByIdAsync(photoId, Hotel); //TODO: Create batch processing api
+            ApiResponse<GalleryRecord>? photoResponse = await Api.GetPhotoByIdAsync(photoId, Hotel).ConfigureAwait(false); //TODO: Create batch processing api
             if (photoResponse == null) return;
 
             if (!ImageCache.ContainsKey(photoId) && !Photos.ContainsKey(photoId) && photoResponse.TryGetData(out var record))

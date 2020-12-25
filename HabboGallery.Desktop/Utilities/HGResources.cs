@@ -39,13 +39,15 @@ namespace HabboGallery.Desktop.Utilities
         {
             if (buttonControl.InvokeRequired)
                 buttonControl.Invoke((MethodInvoker)delegate { RenderButtonState(buttonControl, enabled); });
+            else
+            {
+                string buttonResourceName = buttonControl.Name;
 
-            string buttonResourceName = buttonControl.Name;
+                if (!enabled)
+                    buttonResourceName += "_Disabled";
 
-            if (!enabled)
-                buttonResourceName += "_Disabled";
-
-            buttonControl.BackgroundImage = GetImageResource(buttonResourceName + ".png");
+                buttonControl.BackgroundImage = GetImageResource(buttonResourceName + ".png");
+            }
         }
 
         public static Stream GetResourceStream(string embeddedResourceName)

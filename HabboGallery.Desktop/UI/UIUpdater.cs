@@ -130,7 +130,7 @@ namespace HabboGallery.Desktop.UI
                 _zoomIndex = (_zoomIndex - 1) < 0 ? _zoomTypes.Length - 1 : _zoomIndex - 1;
             else  _zoomIndex = (_zoomIndex + 1) == _zoomTypes.Length ? 0 : _zoomIndex + 1;
 
-            Target.Invoke((MethodInvoker)delegate
+            Target.ZoomLbl.Invoke((MethodInvoker)delegate
             {
                 Target.ZoomLbl.Text = _zoomTypes[_zoomIndex];
             });
