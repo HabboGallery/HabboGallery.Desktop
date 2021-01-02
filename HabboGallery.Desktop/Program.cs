@@ -48,9 +48,6 @@ namespace HabboGallery.Desktop
 
         public Program()
         {
-            if (!OperatingSystem.IsWindowsVersionAtLeast(7))
-                throw new PlatformNotSupportedException("This operating system is not supported! The minimum requirement is Windows 7 and Windows 10 is highy recommended!");
-
             Eavesdropper.Terminate();
             Eavesdropper.Certifier = new CertificateManager("HabboGallery", "HabboGallery Root Certificate");
             
