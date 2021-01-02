@@ -15,6 +15,7 @@ using HabboGallery.Desktop.Habbo;
 using HabboGallery.Desktop.Controls;
 using HabboGallery.Desktop.Web.Json;
 using HabboGallery.Desktop.Utilities;
+using HabboGallery.Desktop.Habbo2020;
 using HabboGallery.Desktop.Habbo.Network;
 
 using Sulakore.Habbo;
@@ -46,18 +47,18 @@ namespace HabboGallery.Desktop
         private readonly UIUpdater _ui;
         
         //TODO: Lazy loading the images in carousel
-        public Dictionary<int, Image> ImageCache { get; }
-        public Dictionary<int, GalleryRecord> Photos { get; }
+        public Dictionary<long, Image> ImageCache { get; }
+        public Dictionary<long, GalleryRecord> Photos { get; }
 
         public int CurrentIndex { get; set; }
         public GalleryRecord? CurrentPhoto => Photos?.Values.ToArray()[CurrentIndex]; //TODO:
 
-        private Queue<int> _roomPhotoQueue;
+        private Queue<long> _roomPhotoQueue;
         private Queue<PhotoItem> _photoPublishingQueue;
-        private Dictionary<int, HWallItem> _roomPhotoItems;
+        private Dictionary<long, HNewWallItem> _roomPhotoItems;
         
         public string? SessionUsername { get; set; }
-        public int CurrentRoomId { get; private set; }
+        public long CurrentRoomId { get; private set; }
 
         private bool _isProcessingItems;
 
@@ -69,13 +70,13 @@ namespace HabboGallery.Desktop
         {
             Application.AddMessageFilter(this);
 
-            ImageCache = new Dictionary<int, Image>();
-            Photos = new Dictionary<int, GalleryRecord>();
+            ImageCache = new Dictionary<long, Image>();
+            Photos = new Dictionary<long, GalleryRecord>();
             
-            _roomPhotoQueue = new Queue<int>();
+            _roomPhotoQueue = new Queue<long>();
             _photoPublishingQueue = new Queue<PhotoItem>();
 
-            _roomPhotoItems = new Dictionary<int, HWallItem>();
+            _roomPhotoItems = new Dictionary<long, HNewWallItem>();
 
             InitializeComponent();
 
@@ -122,11 +123,11 @@ namespace HabboGallery.Desktop
             }
         }
         
-        private void OnFurniList(DataInterceptedEventArgs e)
+        private void OnInventoryPush(DataInterceptedEventArgs e)
         {
             e.Continue();
 
-            IEnumerable<CHItem> items = CHItem.Parse(e.Packet)
+            IEnumerable<HNewItem> items = HNewItem.Parse(e.Packet)
                 .Where(i => i.TypeId == 3 && !Photos.ContainsKey(i.Id));
 
             int itemCount = items.Count();
@@ -141,9 +142,11 @@ namespace HabboGallery.Desktop
             _isProcessingItems = true;
 
             //Send all photo items in inventory to photo data processing pipeline.
-            foreach (CHItem item in items)
+            foreach (HNewItem item in items)
             {
-                var photoItem = PhotoItem.Create(item.Id, item.ExtraData, Hotel, SessionUsername,
+                string extraData = ((HLegacyStuffData)item.StuffData).Data;
+
+                var photoItem = PhotoItem.Create(item.Id, extraData, Hotel, SessionUsername,
                     roomId: null);
 
                 _photoPublishingQueue.Enqueue(photoItem);
@@ -153,14 +156,14 @@ namespace HabboGallery.Desktop
         {
             e.Continue();
 
-            IEnumerable<HWallItem> items = HWallItem.Parse(e.Packet)
+            IEnumerable<HNewWallItem> items = HNewWallItem.Parse(e.Packet)
                 .Where(i => i.TypeId == 3 && !Photos.ContainsKey(i.Id) &&
                 !_roomPhotoQueue.Contains(i.Id));
 
-            IEnumerable<int>? unknownIds = await Api.BatchCheckExistingIdsAsync(items.Select(i => i.Id), Hotel).ConfigureAwait(false);
+            IEnumerable<long>? unknownIds = await Api.BatchCheckExistingIdsAsync(items.Select(i => i.Id), Hotel).ConfigureAwait(false);
 
             int itemCount = items.Count();
-            int unknownCount = unknownIds.Count();
+            int unknownCount = unknownIds?.Count() ?? 0;
 
             string alertMessage = (itemCount == 0 ? Constants.SCANNING_EMPTY : itemCount.ToString())
                 + (itemCount == 0 || itemCount > 1 ? Constants.SCANNING_MULTI : Constants.SCANNING_SINGLE)
@@ -173,9 +176,9 @@ namespace HabboGallery.Desktop
 
             _isProcessingItems = true;
 
-            foreach (HWallItem item in items)
+            foreach (HNewWallItem item in items)
             {
-                if (unknownIds.Contains(item.Id))
+                if (unknownIds?.Contains(item.Id) ?? true)
                 {
                     _roomPhotoQueue.Enqueue(item.Id);
                     _roomPhotoItems.TryAdd(item.Id, item);
@@ -189,7 +192,7 @@ namespace HabboGallery.Desktop
         }
 
         private static ReadOnlySpan<byte> ExtraDataPrefix => new byte[] { 192, 128, 192, 128 };
-        private void OnItemDataUpdate(DataInterceptedEventArgs e)
+        private void OnItemData(DataInterceptedEventArgs e)
         {
             e.Continue();
 
@@ -206,7 +209,7 @@ namespace HabboGallery.Desktop
             {
                 if (PhotoItem.Validate(extraData) && !Photos.ContainsKey(id))
                 {
-                    _roomPhotoItems.TryGetValue(id, out HWallItem? roomItem);
+                    _roomPhotoItems.TryGetValue(id, out HNewWallItem? roomItem);
 
                     var photoItem = PhotoItem.Create(id, extraData, Hotel, roomItem?.OwnerName, CurrentRoomId);
                     _photoPublishingQueue.Enqueue(photoItem);
@@ -257,7 +260,7 @@ namespace HabboGallery.Desktop
                 }
             }
         }
-        private Task ProcessPhotoQueueAsync()
+        private ValueTask<int> ProcessPhotoQueueAsync()
         {
             if (_roomPhotoQueue.Count <= 1)
                 _isProcessingItems = false;
@@ -265,7 +268,7 @@ namespace HabboGallery.Desktop
             return Connection.SendToServerAsync(Out.GetItemData, _roomPhotoQueue.Peek());
         }
 
-        private async Task GetKnownPhotoByIdAsync(int photoId)
+        private async Task GetKnownPhotoByIdAsync(long photoId)
         {
             //TODO: check imageCache
             ApiResponse<GalleryRecord>? photoResponse = await Api.GetPhotoByIdAsync(photoId, Hotel).ConfigureAwait(false); //TODO: Create batch processing api
@@ -368,15 +371,25 @@ namespace HabboGallery.Desktop
                 return;
             }
 
-            if (e.Packet.Id == 4001)
+            if (e.Packet.Id == 4000)
             {
-                //TODO: H2020
-
-                e.IsBlocked = true;
+                string nonce = string.Empty;
+                string hex = e.Packet.ReadUTF8(0);
+                for (var i = 0; i < 8; i++)
+                {
+                    nonce += hex.Substring(i * 3, 2);
+                }
+                _nonce = Convert.FromHexString(nonce);
             }
-            else if (e.Packet.Id == Out.InfoRetrieve) //TODO: Clean up init
+            else if (e.Packet.Id == 208)
             {
-                //TODO: CancellationTokenSauces fired here?
+                e.WaitUntil = _initializeStreamCiphersTask = InitializeStreamCiphersAsync();
+            }
+            else if (e.Packet.Id == 5)
+            {
+                long sessionId = e.Packet.ReadInt64();
+                SessionUsername = e.Packet.ReadUTF8();
+
                 _ = HandlePhotoQueueAsync();
                 _ = ProcessPhotoItemsAsync();
 
@@ -386,7 +399,7 @@ namespace HabboGallery.Desktop
 
                     //TODO: First connect alert
                     //Constants.INTRO_DIALOG_TITLE
-                    //Constants.INTRO_DIALOG_BODY
+                    //Constants.INTRO_DIALOG_BODY  
                 }
                 else //TODO: Indicate successful connection in client somehow? Constants.APP_CONNECT_SUCCESS
 
@@ -401,7 +414,6 @@ namespace HabboGallery.Desktop
                 }
                 Master.SaveConfig();
             }
-            else if (e.Packet.Id == Out.GetIgnoredUsers) SessionUsername = e.Packet.ReadUTF8(); //TODO: Pull session information with the packet actually meant for it
         }
 
         public void HandleIncoming(object? sender, DataInterceptedEventArgs e)
@@ -412,18 +424,11 @@ namespace HabboGallery.Desktop
                 return;
             }
 
-            if (e.Step == 2)
-            {
-                e.Packet.ReadUTF8();
-
-                IsIncomingEncrypted = e.Packet.ReadBoolean();
-                e.Packet.Replace(false, e.Packet.Position - 1);
-            }
-
-            if (e.Packet.Id == In.Items) OnItems(e);
-            else if (e.Packet.Id == In.FurniList) OnFurniList(e);
-            else if (e.Packet.Id == In.ItemDataUpdate) OnItemDataUpdate(e);
-            else if (e.Packet.Id == In.RoomReady) OnRoomReady(e);
+            if (e.Packet.Id == 279) e.WaitUntil = _initializeStreamCiphersTask;
+            else if (e.Packet.Id == 45) OnItems(e);
+            else if (e.Packet.Id == 48) OnItemData(e);
+            else if (e.Packet.Id == 69) OnRoomReady(e);
+            else if (e.Packet.Id == 140) OnInventoryPush(e);
         }
 
         private void OnRoomReady(DataInterceptedEventArgs e)
@@ -447,7 +452,7 @@ namespace HabboGallery.Desktop
         {
             //TODO: Constants.SCANNING_INVENTORY
 
-            Connection.SendToServerAsync(Out.RequestFurniInventoryWhenNotInRoom);
+            Connection.SendToServerAsync(404);
         }
         private void LoginTitleLbl_Click(object sender, EventArgs e)
         {
@@ -490,9 +495,8 @@ namespace HabboGallery.Desktop
         private void TerminateProxy()
         {
             Eavesdropper.Terminate();
-            Eavesdropper.RequestInterceptedAsync -= InjectGameClientAsync;
+            Eavesdropper.RequestInterceptedAsync -= InjectResourceAsync;
             Eavesdropper.ResponseInterceptedAsync -= InterceptClientPageAsync;
-            Eavesdropper.ResponseInterceptedAsync -= InterceptGameClientAsync;
         }
     }
 }

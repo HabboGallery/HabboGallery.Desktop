@@ -26,7 +26,7 @@ namespace HabboGallery.Desktop.Web
         private readonly HttpClient _client;
         private readonly CookieContainer _cookieContainer;
 
-        private string _loginKey;
+        private string? _loginKey;
 
         public bool IsAuthenticated { get; set; }
 
@@ -65,14 +65,14 @@ namespace HabboGallery.Desktop.Web
             return await response.Content.ReadFromJsonAsync<ApiResponse<GalleryRecord>>().ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<int>?> BatchCheckExistingIdsAsync(IEnumerable<int> ids, HHotel hotel)
+        public async Task<IEnumerable<long>?> BatchCheckExistingIdsAsync(IEnumerable<long> ids, HHotel hotel)
         {
             var request = new BatchRequest(_loginKey, HotelEndPoint.GetRegion(hotel), ids);
             using var response = await _client.PostAsJsonAsync("api/photos/checkexisting", request).ConfigureAwait(false);
             
             try
             {
-                return await response.Content.ReadFromJsonAsync<IEnumerable<int>>().ConfigureAwait(false);
+                return await response.Content.ReadFromJsonAsync<IEnumerable<long>>().ConfigureAwait(false);
             }
             catch (Exception)
             {
@@ -80,7 +80,7 @@ namespace HabboGallery.Desktop.Web
             }
         }
 
-        public async Task<ApiResponse<GalleryRecord>?> GetPhotoByIdAsync(int photoId, HHotel hotel)
+        public async Task<ApiResponse<GalleryRecord>?> GetPhotoByIdAsync(long photoId, HHotel hotel)
         {
             using var response = await _client.GetAsync($"api/photos/byid/{HotelEndPoint.GetRegion(hotel)}/{photoId}").ConfigureAwait(false);
 

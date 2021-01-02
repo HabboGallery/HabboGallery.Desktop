@@ -12,9 +12,9 @@ namespace HabboGallery.Desktop.Web.Json
         public string CountryCode { get; set; }
 
         [JsonPropertyName("photo_ids")]
-        public IEnumerable<int> PhotoIds { get; set; }
+        public IEnumerable<long> PhotoIds { get; set; }
 
-        public BatchRequest(string loginKey, string countryCode, IEnumerable<int> photoIds)
+        public BatchRequest(string loginKey, string countryCode, IEnumerable<long> photoIds)
         {
             LoginKey = loginKey;
             CountryCode = countryCode;

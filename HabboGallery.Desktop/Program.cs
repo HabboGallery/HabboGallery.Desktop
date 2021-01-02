@@ -22,7 +22,7 @@ namespace HabboGallery.Desktop
         public Incoming In { get; set; }
         public Outgoing Out { get; set; }
 
-        public HGameData GameData { get; }
+        public HUser User { get; set; }
         public HConnection Connection { get; }
 
         public HGResources Resources { get; }
@@ -41,16 +41,13 @@ namespace HabboGallery.Desktop
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            
+
             Master = new Program();
             Application.Run(new MainFrm());
         }
 
         public Program()
         {
-            if (!OperatingSystem.IsWindowsVersionAtLeast(7))
-                throw new PlatformNotSupportedException("This operating system is not supported! The minimum requirement is Windows 7 and Windows 10 is highy recommended!");
-
             Eavesdropper.Terminate();
             Eavesdropper.Certifier = new CertificateManager("HabboGallery", "HabboGallery Root Certificate");
             
@@ -64,7 +61,6 @@ namespace HabboGallery.Desktop
 
             Api = new ApiClient(new Uri(Constants.BASE_URL));
 
-            GameData = new HGameData();
             Connection = new HConnection();
         }
 

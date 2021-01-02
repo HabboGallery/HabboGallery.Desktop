@@ -21,7 +21,7 @@ namespace HabboGallery.Desktop.Habbo
         private static readonly Regex _extradataPattern = new(@"^(?<Checksum>-?\d+)\s(?<DateTime>\d+\/\d+\/\d+\s\d+:\d+)\s(?<Description>.*)$", RegexOptions.Compiled);
 
         [JsonPropertyName("item_id")]
-        public int Id { get; set; }
+        public long Id { get; set; }
 
         [JsonPropertyName("game_checksum")]
         public int Checksum { get; set; }
@@ -30,7 +30,7 @@ namespace HabboGallery.Desktop.Habbo
         public string? OwnerName { get; set; }
 
         [JsonPropertyName("room_id")]
-        public int? RoomId { get; set; }
+        public long? RoomId { get; set; }
 
         [JsonPropertyName("country_code")]
         [JsonConverter(typeof(HotelConverter))]
@@ -49,7 +49,7 @@ namespace HabboGallery.Desktop.Habbo
         public static bool Validate(string extraData)
             => _extradataPattern.IsMatch(extraData);
 
-        public static PhotoItem Create(int id, string data, HHotel hotel, string? ownerName, int? roomId)
+        public static PhotoItem Create(long id, string data, HHotel hotel, string? ownerName, long? roomId)
         {
             Match match = _extradataPattern.Match(data);
 

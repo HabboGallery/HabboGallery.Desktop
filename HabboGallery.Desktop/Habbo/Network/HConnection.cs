@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Net;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Security.Cryptography.X509Certificates;
 
 using Sulakore.Network;
 using Sulakore.Network.Protocol;
@@ -11,11 +11,10 @@ namespace HabboGallery.Desktop.Habbo.Network
 {
     public class HConnection : IHConnection
     {
-        private bool _isIntercepting;
         private readonly object _disconnectLock;
 
-        private const string CROSS_DOMAIN_POLICY_REQUEST = "<policy-file-request/>\0";
-        private const string CROSS_DOMAIN_POLICY_RESPONSE = "<cross-domain-policy><allow-access-from domain=\"*\" to-ports=\"*\"/></cross-domain-policy>\0";
+        private bool _isIntercepting;
+        private int _inSteps, _outSteps;
 
         /// <summary>
         /// Occurs when the connection between the client, and server have been intercepted.
@@ -53,19 +52,12 @@ namespace HabboGallery.Desktop.Habbo.Network
             DataIncoming?.Invoke(this, e);
         }
 
-        public int TotalIncoming { get; private set; }
-        public int TotalOutgoing { get; private set; }
-
-        public string Host => Remote?.EndPoint.Host;
-        public ushort Port => (ushort)(Remote?.EndPoint.Port ?? 0);
-        public string Address => Remote?.EndPoint.Address.ToString();
-
-        public int SocketSkip { get; set; } = 0;
         public int ListenPort { get; set; } = 9567;
         public bool IsConnected { get; private set; }
 
         public HNode Local { get; private set; }
         public HNode Remote { get; private set; }
+        public X509Certificate Certificate { get; set; }
 
         public HConnection()
         {
@@ -82,67 +74,43 @@ namespace HabboGallery.Desktop.Habbo.Network
         }
         public async Task InterceptAsync(HotelEndPoint endpoint)
         {
+            // TODO: Implement the usage of a CancellationToken instead of constantly checking the _isIntercepting field.
             _isIntercepting = true;
-            int interceptCount = 0;
             while (!IsConnected && _isIntercepting)
             {
                 try
                 {
-                    Local = await HNode.AcceptNodeAsync(ListenPort).ConfigureAwait(false);
-                    if (!_isIntercepting)
-                        break;
+                    Local = await HNode.AcceptAsync(ListenPort).ConfigureAwait(false);
+                    if (!_isIntercepting) break;
 
-                    if (++interceptCount == SocketSkip)
+                    bool wasDetermined = await Local.DetermineFormatsAsync().ConfigureAwait(false);
+                    if (!_isIntercepting) break;
+
+                    if (Local.IsWebSocket)
                     {
-                        interceptCount = 0;
-                        continue;
+                        await Local.UpgradeWebSocketAsServerAsync(Certificate).ConfigureAwait(false);
                     }
-
-                    byte[] buffer = await Local.PeekAsync(6).ConfigureAwait(false);
-                    if (!_isIntercepting)
-                        break;
-
-                    if (buffer.Length == 0)
-                    {
-                        interceptCount--;
-                        continue;
-                    }
-
-                    Remote = new HNode();
-                    if (HFormat.EvaWire.ReadUInt16(buffer, 4) != 4000)
-                    {
-                        buffer = await Local.ReceiveAsync(512).ConfigureAwait(false);
-                        if (!_isIntercepting)
-                            break;
-
-                        if (Encoding.UTF8.GetString(buffer) == CROSS_DOMAIN_POLICY_REQUEST)
-                        {
-                            await Local.SendAsync(Encoding.UTF8.GetBytes(CROSS_DOMAIN_POLICY_RESPONSE)).ConfigureAwait(false);
-                        }
-                        else
-                            throw new Exception("Expected cross-domain policy request.");
-                        continue;
-                    }
+                    else if (wasDetermined) throw new NotSupportedException();
 
                     var args = new ConnectedEventArgs(endpoint);
                     OnConnected(args);
 
-                    endpoint = (args.HotelServer ?? endpoint);
-
-                    endpoint ??= await args.HotelServerSource.Task.ConfigureAwait(false);
-
-                    if (args.IsFakingPolicyRequest)
+                    endpoint = args.HotelServer ?? endpoint;
+                    if (endpoint == null)
                     {
-                        using var tempRemote = await HNode.ConnectNewAsync(endpoint).ConfigureAwait(false);
-                        await tempRemote.SendAsync(Encoding.UTF8.GetBytes(CROSS_DOMAIN_POLICY_REQUEST)).ConfigureAwait(false);
+                        endpoint = await args.HotelServerSource.Task.ConfigureAwait(false);
                     }
 
-                    if (!await Remote.ConnectAsync(endpoint).ConfigureAwait(false))
-                        break;
-                    IsConnected = true;
+                    Remote = await HNode.ConnectAsync(endpoint).ConfigureAwait(false);
+                    Remote.ReflectFormats(Local);
+                    if (Local.IsWebSocket)
+                    {
+                        IsConnected = await Remote.UpgradeWebSocketAsClientAsync().ConfigureAwait(false);
+                    }
+                    else IsConnected = true;
 
-                    TotalIncoming = 0;
-                    TotalOutgoing = 0;
+                    _inSteps = 0;
+                    _outSteps = 0;
                     Task interceptOutgoingTask = InterceptOutgoingAsync();
                     Task interceptIncomingTask = InterceptIncomingAsync();
                 }
@@ -155,61 +123,50 @@ namespace HabboGallery.Desktop.Habbo.Network
                     }
                 }
             }
-            HNode.StopListeners(ListenPort);
             _isIntercepting = false;
         }
 
-        public Task<int> SendToServerAsync(byte[] data)
+        public ValueTask<int> SendToServerAsync(byte[] data)
         {
             return Remote.SendAsync(data);
         }
-        public Task<int> SendToServerAsync(HPacket packet)
+        public ValueTask<int> SendToServerAsync(HPacket packet)
         {
-            return Remote.SendPacketAsync(packet);
+            return Remote.SendAsync(packet);
         }
-        public Task<int> SendToServerAsync(string signature)
+        public ValueTask<int> SendToServerAsync(ushort id, params object[] values)
         {
-            return Remote.SendPacketAsync(signature);
-        }
-        public Task<int> SendToServerAsync(ushort id, params object[] values)
-        {
-            return Remote.SendPacketAsync(id, values);
+            return Remote.SendAsync(id, values);
         }
 
-        public Task<int> SendToClientAsync(byte[] data)
+        public ValueTask<int> SendToClientAsync(byte[] data)
         {
             return Local.SendAsync(data);
         }
-        public Task<int> SendToClientAsync(HPacket packet)
+        public ValueTask<int> SendToClientAsync(HPacket packet)
         {
-            return Local.SendPacketAsync(packet);
+            return Local.SendAsync(packet);
         }
-        public Task<int> SendToClientAsync(string signature)
+        public ValueTask<int> SendToClientAsync(ushort id, params object[] values)
         {
-            return Local.SendPacketAsync(signature);
-        }
-        public Task<int> SendToClientAsync(ushort id, params object[] values)
-        {
-            return Local.SendPacketAsync(id, values);
+            return Local.SendAsync(id, values);
         }
 
-        private Task<int> ClientRelayer(DataInterceptedEventArgs relayedFrom)
+        private ValueTask<int> ClientRelayer(DataInterceptedEventArgs relayedFrom)
         {
             return SendToClientAsync(relayedFrom.Packet);
         }
-        private Task<int> ServerRelayer(DataInterceptedEventArgs relayedFrom)
+        private ValueTask<int> ServerRelayer(DataInterceptedEventArgs relayedFrom)
         {
             return SendToServerAsync(relayedFrom.Packet);
         }
         private async Task InterceptOutgoingAsync(DataInterceptedEventArgs continuedFrom = null)
         {
-            HPacket packet = await Local.ReceivePacketAsync().ConfigureAwait(false);
+            HPacket packet = await Local.ReceiveAsync().ConfigureAwait(false);
             if (packet != null)
             {
-                var args = new DataInterceptedEventArgs(packet, ++TotalOutgoing, true, InterceptOutgoingAsync, ServerRelayer);
-
-                try
-                { OnDataOutgoing(args); }
+                var args = new DataInterceptedEventArgs(packet, ++_outSteps, true, InterceptOutgoingAsync, ServerRelayer);
+                try { OnDataOutgoing(args); }
                 catch { args.Restore(); }
 
                 if (!args.IsBlocked && !args.WasRelayed)
@@ -218,21 +175,22 @@ namespace HabboGallery.Desktop.Habbo.Network
                 }
                 if (!args.HasContinued)
                 {
+                    if (args.WaitUntil != null)
+                    {
+                        await args.WaitUntil.ConfigureAwait(false);
+                    }
                     args.Continue();
                 }
             }
-            else
-                Disconnect();
+            else Disconnect();
         }
         private async Task InterceptIncomingAsync(DataInterceptedEventArgs continuedFrom = null)
         {
-            HPacket packet = await Remote.ReceivePacketAsync().ConfigureAwait(false);
+            HPacket packet = await Remote.ReceiveAsync().ConfigureAwait(false);
             if (packet != null)
             {
-                var args = new DataInterceptedEventArgs(packet, ++TotalIncoming, false, InterceptIncomingAsync, ClientRelayer);
-
-                try
-                { OnDataIncoming(args); }
+                var args = new DataInterceptedEventArgs(packet, ++_inSteps, false, InterceptIncomingAsync, ClientRelayer);
+                try { OnDataIncoming(args); }
                 catch { args.Restore(); }
 
                 if (!args.IsBlocked && !args.WasRelayed)
@@ -244,8 +202,7 @@ namespace HabboGallery.Desktop.Habbo.Network
                     args.Continue();
                 }
             }
-            else
-                Disconnect();
+            else Disconnect();
         }
 
         public void Disconnect()

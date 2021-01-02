@@ -9,17 +9,18 @@
         
         public const string PHOTO_ISSUE_DIALOG_IMAGE_URL = "https://images.habbo.com/c_images/Security/safetytips6_n.png";
 
-        public const string INTERCEPTING_CLIENT = "Intercepting Client..";
-        public const string INTERCEPTING_CONNECTION = "Intercepting Connection..";
-        public const string INTERCEPTING_CLIENT_PAGE = "Intercepting Client Page..";
+        public const string STANDING_BY = "Standing By...";
+
+        public const string INTERCEPTING_CLIENT = "Intercepting Client...";
+        public const string INTERCEPTING_CONNECTION = "Intercepting Connection...";
+        public const string INTERCEPTING_CLIENT_PAGE = "Intercepting Client Page...";
         public const string INTERCEPTING_CLIENT_REQUEST_RESPONSE = "Intercepting Client Request/Response";
 
-        public const string MODIFYING_CLIENT = "Modifying Client..";
-        public const string INJECTING_CLIENT = "Injecting Client..";
-        public const string GENERATING_MESSAGE_HASHES = "Generating Message Hashes..";
+        public const string MODIFYING_CLIENT = "Modifying Client...";
+        public const string INJECTING_CLIENT = "Injecting Client...";
 
-        public const string ASSEMBLING_CLIENT = "Assembling Client..";
-        public const string DISASSEMBLING_CLIENT = "Disassembling Client..";
+        public const string ASSEMBLING_CLIENT = "Assembling Client...";
+        public const string DISASSEMBLING_CLIENT = "Disassembling Client...";
 
         public const string CONNECTED = "Connected!";
         public const string DISCONNECTED = "Disconnected!";
