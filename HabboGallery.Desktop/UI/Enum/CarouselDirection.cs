@@ -1,8 +1,7 @@
-﻿namespace HabboGallery.Desktop.UI
+﻿namespace HabboGallery.Desktop.UI;
+
+public enum CarouselDirection
 {
-    public enum CarouselDirection
-    {
-        Up = -1,
-        Down = 1
-    }
+    Up = -1,
+    Down = 1
 }

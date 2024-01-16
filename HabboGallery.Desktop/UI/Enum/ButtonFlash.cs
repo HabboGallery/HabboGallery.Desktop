@@ -1,11 +1,10 @@
-﻿namespace HabboGallery.Desktop.UI
+﻿namespace HabboGallery.Desktop.UI;
+
+public enum ButtonFlash
 {
-    public enum ButtonFlash
-    {
-        InventorySearch,
-        PublishToWeb,
-        Purchase,
-        NextPhoto,
-        PreviousPhoto
-    }
+    InventorySearch,
+    PublishToWeb,
+    Purchase,
+    NextPhoto,
+    PreviousPhoto
 }

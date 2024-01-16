@@ -1,13 +1,5 @@
-﻿using System;
-using System.IO;
-using System.Text;
-using System.Linq;
-using System.Drawing;
-using System.Threading;
+﻿using System.Text;
 using System.Diagnostics;
-using System.Windows.Forms;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 
 using HabboGallery.Desktop.UI;
 using HabboGallery.Desktop.Web;
@@ -15,14 +7,8 @@ using HabboGallery.Desktop.Habbo;
 using HabboGallery.Desktop.Controls;
 using HabboGallery.Desktop.Web.Json;
 using HabboGallery.Desktop.Utilities;
-using HabboGallery.Desktop.Habbo2020;
 using HabboGallery.Desktop.Habbo.Network;
 
-using Sulakore.Habbo;
-using Sulakore.Network;
-using Sulakore.Habbo.Messages;
-
-using Eavesdrop;
 
 #nullable enable
 namespace HabboGallery.Desktop
@@ -36,9 +22,6 @@ namespace HabboGallery.Desktop
 
         public ApiClient Api => Master.Api;
         
-        public Incoming In => Master.In;
-        public Outgoing Out => Master.Out;
-
         public HGResources Resources => Master.Resources;
         public HGConfiguration Configuration => Master.Configuration;
 
@@ -63,8 +46,6 @@ namespace HabboGallery.Desktop
         private bool _isProcessingItems;
 
         public bool HasBeenClosed { get; private set; }
-
-        public HHotel Hotel => HotelServer.Hotel;
 
         public MainFrm()
         {
@@ -97,7 +78,6 @@ namespace HabboGallery.Desktop
 
                 if (result == DialogResult.Yes)
                 {
-                    Eavesdropper.Terminate();
                     Process.Start(new ProcessStartInfo(Constants.BASE_URL + "/download") { UseShellExecute = true });
 
                     Environment.Exit(0);
@@ -105,24 +85,7 @@ namespace HabboGallery.Desktop
             }
             else _ui.SetStatusMessage(Constants.UP_TO_DATE_MESSAGE);
         }
-        
-        private void Initialize()
-        {
-            Connection.DataOutgoing += HandleOutgoing;
-            Connection.DataIncoming += HandleIncoming;
-
-            Connection.Connected += ConnectionOpened;
-            Connection.Disconnected += ConnectionClosed;
-
-            if (Eavesdropper.Certifier.CreateTrustedRootCertificate())
-            {
-                Eavesdropper.ResponseInterceptedAsync += InterceptClientPageAsync;
-
-                Eavesdropper.Initiate(Constants.PROXY_PORT);
-                _ui.SetStatusMessage(Constants.INTERCEPTING_CLIENT_PAGE);
-            }
-        }
-        
+                
         private void OnInventoryPush(DataInterceptedEventArgs e)
         {
             e.Continue();
@@ -341,7 +304,6 @@ namespace HabboGallery.Desktop
 
         private void MainFrm_Load(object sender, EventArgs e)
         {
-            TerminateProxy();
             LoadConfiguration();
         }
 
@@ -490,13 +452,6 @@ namespace HabboGallery.Desktop
 
                 //TODO: Graceful exit logic.
             }
-        }
-
-        private void TerminateProxy()
-        {
-            Eavesdropper.Terminate();
-            Eavesdropper.RequestInterceptedAsync -= InjectResourceAsync;
-            Eavesdropper.ResponseInterceptedAsync -= InterceptClientPageAsync;
         }
     }
 }

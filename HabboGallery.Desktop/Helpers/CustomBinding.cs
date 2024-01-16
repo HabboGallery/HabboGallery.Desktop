@@ -1,43 +1,40 @@
-﻿using System.Threading;
-using System.Globalization;
-using System.Windows.Forms;
+﻿using System.Globalization;
 
-namespace HabboGallery.Desktop.Helpers
+namespace HabboGallery.Desktop.Helpers;
+
+public class CustomBinding : Binding
 {
-    public class CustomBinding : Binding
+    private readonly object _converterParameter;
+    private readonly IValueConverter _converter;
+    private readonly CultureInfo _converterCulture;
+
+    public CustomBinding(string propertyName, object dataSource, string dataMember, IValueConverter valueConverter, object converterParameter = null)
+        : this(propertyName, dataSource, dataMember, valueConverter, Thread.CurrentThread.CurrentUICulture, converterParameter)
+    { }
+    public CustomBinding(string propertyName, object dataSource, string dataMember, IValueConverter valueConverter, CultureInfo culture, object converterParameter = null)
+        : base(propertyName, dataSource, dataMember, true)
     {
-        private readonly object _converterParameter;
-        private readonly IValueConverter _converter;
-        private readonly CultureInfo _converterCulture;
+        _converter = valueConverter;
+        _converterCulture = culture;
+        _converterParameter = converterParameter;
+    }
 
-        public CustomBinding(string propertyName, object dataSource, string dataMember, IValueConverter valueConverter, object converterParameter = null)
-            : this(propertyName, dataSource, dataMember, valueConverter, Thread.CurrentThread.CurrentUICulture, converterParameter)
-        { }
-        public CustomBinding(string propertyName, object dataSource, string dataMember, IValueConverter valueConverter, CultureInfo culture, object converterParameter = null)
-            : base(propertyName, dataSource, dataMember, true)
+    protected override void OnParse(ConvertEventArgs cevent)
+    {
+        if (_converter != null)
         {
-            _converter = valueConverter;
-            _converterCulture = culture;
-            _converterParameter = converterParameter;
+            cevent.Value = _converter.ConvertBack(cevent.Value,
+                cevent.DesiredType, _converterParameter, _converterCulture);
         }
-
-        protected override void OnParse(ConvertEventArgs cevent)
+        else base.OnParse(cevent);
+    }
+    protected override void OnFormat(ConvertEventArgs cevent)
+    {
+        if (_converter != null)
         {
-            if (_converter != null)
-            {
-                cevent.Value = _converter.ConvertBack(cevent.Value,
-                    cevent.DesiredType, _converterParameter, _converterCulture);
-            }
-            else base.OnParse(cevent);
+            cevent.Value = _converter.Convert(cevent.Value,
+                cevent.DesiredType, _converterParameter, _converterCulture);
         }
-        protected override void OnFormat(ConvertEventArgs cevent)
-        {
-            if (_converter != null)
-            {
-                cevent.Value = _converter.Convert(cevent.Value,
-                    cevent.DesiredType, _converterParameter, _converterCulture);
-            }
-            else base.OnFormat(cevent);
-        }
+        else base.OnFormat(cevent);
     }
 }

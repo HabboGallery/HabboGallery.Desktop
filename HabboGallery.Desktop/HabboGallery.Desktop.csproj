@@ -2,7 +2,9 @@
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
 		<UseWindowsForms>true</UseWindowsForms>
-		<TargetFramework>net5.0-windows</TargetFramework>
+		
+		<ImplicitUsings>enable</ImplicitUsings>
+		<TargetFramework>net8.0-windows</TargetFramework>
 
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
@@ -10,7 +12,7 @@
 
 	<PropertyGroup>
 		<Authors>HabboGallery</Authors>
-		<Copyright>Copyright © HabboGallery 2020</Copyright>
+		<Copyright>Copyright © HabboGallery</Copyright>
 
 		<Version>0.6.0</Version>
 		<FileVersion>0.6.0.0</FileVersion>
@@ -20,13 +22,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <None Include="..\.editorconfig" Link=".editorconfig" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\Submodules\Sulakore\Sulakore\Sulakore.csproj" />
-		<ProjectReference Include="..\Submodules\Eavesdrop\Eavesdrop\Eavesdrop.csproj" />
-		<ProjectReference Include="..\Submodules\Wazzy\Wazzy\Wazzy.csproj" />
+	  <PackageReference Include="OswaldTechnologies.Extensions.Hosting.WindowsFormsLifetime" Version="1.0.2" />
 	</ItemGroup>
 
 	<Import Project="$(ProjectDir)EmbeddedResources.props" />
