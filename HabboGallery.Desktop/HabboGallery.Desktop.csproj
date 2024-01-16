@@ -3,6 +3,7 @@
 		<Nullable>enable</Nullable>
 		<OutputType>WinExe</OutputType>
 		<UseWindowsForms>true</UseWindowsForms>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		
 		<ImplicitUsings>enable</ImplicitUsings>
 		<TargetFramework>net8.0-windows</TargetFramework>
@@ -25,6 +26,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="EmbedResourceCSharp" Version="1.1.3">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
 	  <PackageReference Include="OswaldTechnologies.Extensions.Hosting.WindowsFormsLifetime" Version="1.0.2" />
 	</ItemGroup>
 

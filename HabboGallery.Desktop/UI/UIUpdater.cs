@@ -33,18 +33,15 @@ public class UIUpdater
         InitVolterFont();
     }
 
-    private void InitVolterFont()
+    private unsafe void InitVolterFont()
     {
-        byte[] fontdata = HGResources.GetResourceBytes("Volter.ttf");
-
-        IntPtr fontDataPtr = Marshal.AllocCoTaskMem(fontdata.Length);
-        Marshal.Copy(fontdata, 0, fontDataPtr, fontdata.Length);
-
         uint cFonts = 0;
-        NativeMethods.AddFontMemResourceEx(fontDataPtr, (uint)fontdata.Length, IntPtr.Zero, ref cFonts);
-        _fontCollection.AddMemoryFont(fontDataPtr, fontdata.Length);
-
-        Marshal.FreeCoTaskMem(fontDataPtr);
+        ReadOnlySpan<byte> fontData = GalleryResources.GetResourceBytes("Volter.ttf");
+        fixed (byte* fontDataPtr = fontData)
+        {
+            NativeMethods.AddFontMemResourceEx(fontDataPtr, (uint)fontData.Length, IntPtr.Zero, ref cFonts);
+            _fontCollection.AddMemoryFont((nint)fontDataPtr, fontData.Length);
+        }
 
         Target.DescriptionLbl.Font = 
             Target.EmailLbl.Font =
@@ -58,7 +55,7 @@ public class UIUpdater
             Target.RememberMeBx.Font = new Font(_fontCollection.Families[0], 7);
     }
 
-    public bool DragControl(ref Message message)
+    public unsafe bool DragControl(ref Message message)
     {
         const int WM_NCLBUTTONDOWN = 0xA1;
         const int WM_LBUTTONDOWN = 0x0201;
@@ -68,7 +65,7 @@ public class UIUpdater
             _controlsToMove.Contains(Control.FromHandle(message.HWnd)))
         {
             NativeMethods.ReleaseCapture();
-            NativeMethods.SendMessage(Target.Handle, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+            NativeMethods.SendMessage(Target.Handle.ToPointer(), WM_NCLBUTTONDOWN, HTCAPTION, 0);
             return true;
         }
         return false;

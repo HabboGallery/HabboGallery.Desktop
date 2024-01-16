@@ -2,14 +2,14 @@
 
 namespace HabboGallery.Desktop.Utilities;
 
-internal static class NativeMethods
+internal unsafe static class NativeMethods
 {
     [DllImport("user32.dll")]
     internal static extern bool ReleaseCapture();
 
     [DllImport("user32.dll")]
-    internal static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+    internal static extern int SendMessage(void* hWnd, int Msg, int wParam, int lParam);
     
     [DllImport("gdi32.dll")]
-    internal static extern IntPtr AddFontMemResourceEx(IntPtr pbFont, uint cbFont, IntPtr pdv, [In] ref uint pcFonts);
+    internal static extern nint AddFontMemResourceEx(void* pbFont, uint cbFont, void* pdv, uint* pcFonts);
 }

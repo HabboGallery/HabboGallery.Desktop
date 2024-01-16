@@ -38,4 +38,10 @@ internal sealed class PostConfigureGalleryOptions : IPostConfigureOptions<Galler
             });
         }
     }
+
+    private static DirectoryInfo CreateDataDirectory()
+    {
+        string appdataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        return Directory.CreateDirectory(Path.Combine(appdataPath, "HabboGallery"));
+    }
 }

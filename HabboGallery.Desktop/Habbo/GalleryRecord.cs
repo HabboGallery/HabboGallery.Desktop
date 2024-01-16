@@ -8,7 +8,7 @@ namespace HabboGallery.Desktop.Habbo;
 /// <summary>
 /// Represents a photo that has been published on a web server.
 /// </summary>
-public record GalleryRecord : PhotoItem
+public sealed record GalleryRecord : PhotoItem
 {
     [JsonPropertyName("url")]
     public string Url { get; set; }
@@ -18,19 +18,19 @@ public record GalleryRecord : PhotoItem
 
     private static readonly Dictionary<char, Image> CharacterImages = new()
     {
-        {'0', Image.FromStream(HGResources.GetResourceStream("0.png"))},
-        {'1', Image.FromStream(HGResources.GetResourceStream("1.png"))},
-        {'2', Image.FromStream(HGResources.GetResourceStream("2.png"))},
-        {'3', Image.FromStream(HGResources.GetResourceStream("3.png"))},
-        {'4', Image.FromStream(HGResources.GetResourceStream("4.png"))},
-        {'5', Image.FromStream(HGResources.GetResourceStream("5.png"))},
-        {'6', Image.FromStream(HGResources.GetResourceStream("6.png"))},
-        {'7', Image.FromStream(HGResources.GetResourceStream("7.png"))},
-        {'8', Image.FromStream(HGResources.GetResourceStream("8.png"))},
-        {'9', Image.FromStream(HGResources.GetResourceStream("9.png"))},
-        {'/', Image.FromStream(HGResources.GetResourceStream("Slash.png"))},
-        {':', Image.FromStream(HGResources.GetResourceStream("Colon.png"))},
-        {' ', Image.FromStream(HGResources.GetResourceStream("Space.png"))},
+        {'0', GalleryResources.GetImage("0.png")},
+        {'1', GalleryResources.GetImage("1.png")},
+        {'2', GalleryResources.GetImage("2.png")},
+        {'3', GalleryResources.GetImage("3.png")},
+        {'4', GalleryResources.GetImage("4.png")},
+        {'5', GalleryResources.GetImage("5.png")},
+        {'6', GalleryResources.GetImage("6.png")},
+        {'7', GalleryResources.GetImage("7.png")},
+        {'8', GalleryResources.GetImage("8.png")},
+        {'9', GalleryResources.GetImage("9.png")},
+        {'/', GalleryResources.GetImage("Slash.png")},
+        {':', GalleryResources.GetImage("Colon.png")},
+        {' ', GalleryResources.GetImage("Space.png")},
     };
 
     // TODO: ImageSharp
