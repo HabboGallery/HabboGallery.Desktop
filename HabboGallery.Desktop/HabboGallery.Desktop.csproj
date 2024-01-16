@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
+		<Nullable>enable</Nullable>
 		<OutputType>WinExe</OutputType>
 		<UseWindowsForms>true</UseWindowsForms>
 		
@@ -8,6 +9,8 @@
 
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+
+        <NoWarn>CA1416</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup>

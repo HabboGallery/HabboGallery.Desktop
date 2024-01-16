@@ -9,14 +9,12 @@ using HabboGallery.Desktop.Web.Json;
 using Sulakore.Habbo;
 using Sulakore.Network;
 
-#nullable enable
 namespace HabboGallery.Desktop.Web;
 
-//TODO: Re-write for the proper API endpoints
+// TODO: Re-write for the proper API endpoints
+// TODO: JWT auth
 public class ApiClient : HttpClient
 {
-    private static readonly Regex CsrfRegex = new("<meta\\s+name=\"csrf-token\"\\s+content=\"(?<token>[a-zA-Z0-9]{40})\">", RegexOptions.Compiled);
-
     private readonly HttpClient _client;
     private readonly CookieContainer _cookieContainer;
 
@@ -36,7 +34,7 @@ public class ApiClient : HttpClient
             BaseAddress = baseAddress
         };
         _client.DefaultRequestHeaders.Add("Accept", "application/json");
-        _client.DefaultRequestHeaders.Add("User-Agent", "HabboGallery.Desktop Agent v" + Assembly.GetExecutingAssembly().GetName().Version);
+        _client.DefaultRequestHeaders.Add("User-Agent", "HabboGallery.Desktop v" + Assembly.GetExecutingAssembly().GetName().Version);
     }
 
     public async Task<ApiResponse<GalleryRecord>?> StorePhotoAsync(PhotoItem photoItem)
@@ -116,15 +114,6 @@ public class ApiClient : HttpClient
 
         Version.TryParse(content, out Version? version);
         return version;
-    }
-
-    public async Task<string> FetchTokenAsync()
-    {
-        string content = await _client.GetStringAsync("login").ConfigureAwait(false);
-        Match tokenMatch = CsrfRegex.Match(content);
-
-        return tokenMatch.Success ? 
-            tokenMatch.Groups["token"].Value : throw new Exception("No CSRF token found");
     }
 
     public async Task<Image> TryGetImageAsync(string url, CancellationToken cancellationToken = default)

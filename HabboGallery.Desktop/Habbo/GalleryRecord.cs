@@ -33,6 +33,7 @@ public record GalleryRecord : PhotoItem
         {' ', Image.FromStream(HGResources.GetResourceStream("Space.png"))},
     };
 
+    // TODO: ImageSharp
     public Image CreateDateImage(Image photo)
     {
         Span<char> date = stackalloc char[DATE_LENGTH];

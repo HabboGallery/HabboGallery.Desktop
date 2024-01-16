@@ -7,18 +7,18 @@ using HabboGallery.Desktop.Web.Json;
 
 using Sulakore.Habbo;
 
-#nullable enable
 namespace HabboGallery.Desktop.Habbo;
 
 /// <summary>
 /// Represents single photo item in-game.
 /// </summary>
-public record PhotoItem
+public partial record PhotoItem
 {
     public const int DATE_LENGTH = 14;
     public const string DATE_FORMAT = "dd/MM/yy HH:mm";
 
-    private static readonly Regex _extradataPattern = new(@"^(?<Checksum>-?\d+)\s(?<DateTime>\d+\/\d+\/\d+\s\d+:\d+)\s(?<Description>.*)$", RegexOptions.Compiled);
+    [GeneratedRegex(@"^(?<Checksum>-?\d+)\s(?<DateTime>\d+\/\d+\/\d+\s\d+:\d+)\s(?<Description>.*)$", RegexOptions.Compiled)]
+    private static partial Regex ExtradataRegex();
 
     [JsonPropertyName("item_id")]
     public long Id { get; set; }
@@ -47,11 +47,11 @@ public record PhotoItem
     { }
 
     public static bool Validate(string extraData)
-        => _extradataPattern.IsMatch(extraData);
+        => ExtradataRegex().IsMatch(extraData);
 
     public static PhotoItem Create(long id, string data, HHotel hotel, string? ownerName, long? roomId)
     {
-        Match match = _extradataPattern.Match(data);
+        Match match = ExtradataRegex().Match(data);
 
         return new PhotoItem
         {
@@ -64,4 +64,5 @@ public record PhotoItem
             Hotel = hotel
         };
     }
+
 }

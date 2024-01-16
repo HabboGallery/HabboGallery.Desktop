@@ -12,7 +12,7 @@ public class UIUpdater
     private readonly HashSet<Control> _controlsToMove;
     private readonly PrivateFontCollection _fontCollection;
 
-    private readonly string[] _zoomTypes = new string[2] { "2X", "1X" };
+    private readonly string[] _zoomTypes = ["2X", "1X"];
     
     private int _zoomIndex;
 
@@ -23,10 +23,10 @@ public class UIUpdater
         Target = target;
 
         // Initialize draggable controls
-        _controlsToMove = new HashSet<Control> {
+        _controlsToMove = [
             Target,
             Target.DragPnl
-        };
+        ];
         
         // Initialize Volter font
         _fontCollection = new PrivateFontCollection();
